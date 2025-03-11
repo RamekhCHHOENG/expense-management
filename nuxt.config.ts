@@ -58,6 +58,7 @@ export default defineNuxtConfig({
 
     vite: {
         optimizeDeps: {
+            include: ["@unovis/ts", "@unovis/vue"],
             exclude: ["fsevents"],
         },
         resolve: {
