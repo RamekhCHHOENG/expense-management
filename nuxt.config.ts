@@ -9,7 +9,7 @@ export default defineNuxtConfig({
 
     app: {
         head: {
-            title: "Expense Manager",
+            title: "Expense Management",
             meta: [
                 { charset: "utf-8" },
                 {
@@ -20,18 +20,38 @@ export default defineNuxtConfig({
         },
     },
 
+    postcss: {
+        plugins: {
+            tailwindcss: {},
+            autoprefixer: {},
+        },
+    },
+
+    components: {
+        dirs: [
+            {
+                path: "~/components/ui",
+                extensions: [".vue"],
+                prefix: "",
+            },
+            {
+                path: "~/components",
+                extensions: [".vue"],
+            },
+        ],
+    },
+
     runtimeConfig: {
         public: {
             firebase: {
-                apiKey: "AIzaSyBcpxqsx5fhi5Iiis7LS0YJHQY1Q8ClJes",
-                authDomain: "expense-management-b84bc.firebaseapp.com",
-                databaseURL:
-                    "https://expense-management-b84bc-default-rtdb.asia-southeast1.firebasedatabase.app",
-                projectId: "expense-management-b84bc",
-                storageBucket: "expense-management-b84bc.appspot.com",
-                messagingSenderId: "721998265859",
-                appId: "1:721998265859:web:cc220b9a328b40d952d836",
-                measurementId: "G-NT7GQ1P5M6",
+                apiKey: process.env.NUXT_FIREBASE_API_KEY,
+                authDomain: process.env.NUXT_FIREBASE_AUTH_DOMAIN,
+                projectId: process.env.NUXT_FIREBASE_PROJECT_ID,
+                storageBucket: process.env.NUXT_FIREBASE_STORAGE_BUCKET,
+                messagingSenderId:
+                    process.env.NUXT_FIREBASE_MESSAGING_SENDER_ID,
+                appId: process.env.NUXT_FIREBASE_APP_ID,
+                measurementId: process.env.NUXT_FIREBASE_MEASUREMENT_ID,
             },
         },
     },
@@ -39,6 +59,11 @@ export default defineNuxtConfig({
     vite: {
         optimizeDeps: {
             exclude: ["fsevents"],
+        },
+        resolve: {
+            alias: {
+                "@": "~",
+            },
         },
     },
 

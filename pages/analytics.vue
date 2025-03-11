@@ -1,96 +1,11 @@
 <template>
-    <DashboardLayout>
-        <div class="space-y-6">
-            <div class="sm:flex sm:items-center">
-                <div class="sm:flex-auto">
-                    <h1 class="text-xl font-semibold text-gray-900">Analytics</h1>
-                    <p class="mt-2 text-sm text-gray-700">
-                        View detailed insights about your income and expenses.
-                    </p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <!-- Monthly Overview -->
-                <div class="bg-white shadow rounded-lg">
-                    <div class="p-6">
-                        <h2 class="text-lg font-medium text-gray-900 mb-4">Monthly Overview</h2>
-                        <div class="h-80 flex items-center justify-center bg-gray-50 rounded-lg">
-                            <p class="text-gray-500">Monthly trend chart coming soon...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Category Distribution -->
-                <div class="bg-white shadow rounded-lg">
-                    <div class="p-6">
-                        <h2 class="text-lg font-medium text-gray-900 mb-4">Expense Distribution</h2>
-                        <div class="h-80 flex items-center justify-center bg-gray-50 rounded-lg">
-                            <p class="text-gray-500">Category pie chart coming soon...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Income vs Expenses -->
-                <div class="bg-white shadow rounded-lg">
-                    <div class="p-6">
-                        <h2 class="text-lg font-medium text-gray-900 mb-4">Income vs Expenses</h2>
-                        <div class="space-y-4">
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-sm font-medium text-gray-900">Income</span>
-                                    <span class="text-sm text-green-600">${{ formatAmount(totalIncome) }}</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div
-                                        class="bg-green-500 h-2 rounded-full"
-                                        :style="{ width: incomePercentage + '%' }"
-                                    ></div>
-                                </div>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-sm font-medium text-gray-900">Expenses</span>
-                                    <span class="text-sm text-red-600">${{ formatAmount(totalExpenses) }}</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div
-                                        class="bg-red-500 h-2 rounded-full"
-                                        :style="{ width: expensePercentage + '%' }"
-                                    ></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Top Categories -->
-                <div class="bg-white shadow rounded-lg">
-                    <div class="p-6">
-                        <h2 class="text-lg font-medium text-gray-900 mb-4">Top Expense Categories</h2>
-                        <div class="space-y-4">
-                            <div
-                                v-for="category in topExpenseCategories"
-                                :key="category.name"
-                                class="bg-gray-50 p-4 rounded-lg"
-                            >
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-sm font-medium text-gray-900">{{ category.name }}</span>
-                                    <span class="text-sm text-gray-600">${{ formatAmount(category.amount) }}</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div
-                                        class="bg-indigo-500 h-2 rounded-full"
-                                        :style="{ width: (category.amount / totalExpenses * 100) + '%' }"
-                                    ></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="container py-6">
+        <h1 class="text-3xl font-bold">Analytics</h1>
+        <div class="mt-6">
+            <!-- Analytics content will go here -->
+            <p>View your expense analytics and reports here.</p>
         </div>
-    </DashboardLayout>
+    </div>
 </template>
 
 <script setup lang="ts">

@@ -1,20 +1,41 @@
 import {
+    browserLocalPersistence,
+    browserSessionPersistence,
+    confirmPasswordReset,
     createUserWithEmailAndPassword,
     signOut as firebaseSignOut,
     GithubAuthProvider,
     GoogleAuthProvider,
     onAuthStateChanged,
+    onIdTokenChanged,
+    sendPasswordResetEmail,
+    setPersistence,
     signInWithEmailAndPassword,
     signInWithPopup,
+    type Auth,
+    type AuthError,
+    type ErrorFn,
     type User,
 } from "firebase/auth";
 import { defineStore } from "pinia";
 
+interface AuthState {
+    user: User | null;
+    loading: boolean;
+    error: string | null;
+    isTokenRefreshing: boolean;
+    initialized: boolean;
+    authInstance: Auth | null;
+}
+
 export const useAuthStore = defineStore("auth", {
-    state: () => ({
-        user: null as User | null,
+    state: (): AuthState => ({
+        user: null,
         loading: true,
-        error: null as string | null,
+        error: null,
+        isTokenRefreshing: false,
+        initialized: false,
+        authInstance: null,
     }),
 
     getters: {
@@ -22,55 +43,92 @@ export const useAuthStore = defineStore("auth", {
     },
 
     actions: {
+        setAuth(authInstance: Auth) {
+            this.authInstance = authInstance;
+        },
+
         async init() {
-            const { $auth } = useNuxtApp();
-            if (!$auth) {
-                console.error("Auth not initialized");
-                this.loading = false;
+            if (this.initialized || !this.authInstance) {
                 return;
             }
 
-            return new Promise<void>((resolve) => {
-                const unsubscribe = onAuthStateChanged(
-                    $auth,
-                    (user) => {
-                        this.user = user;
-                        this.loading = false;
-                        resolve();
-                    },
-                    (error) => {
-                        console.error("Auth state change error:", error);
-                        this.loading = false;
-                        this.error = this.getReadableErrorMessage(error);
-                        resolve();
+            try {
+                // Set up token refresh listener
+                onIdTokenChanged(this.authInstance, async (user) => {
+                    if (user) {
+                        const token = await user.getIdToken();
+                        if (process.client) {
+                            localStorage.setItem("auth_token", token);
+                        }
+                    } else {
+                        if (process.client) {
+                            localStorage.removeItem("auth_token");
+                        }
                     }
-                );
+                });
 
-                // Unsubscribe when component is unmounted
-                if (process.client) {
-                    window.onbeforeunload = () => {
-                        unsubscribe();
-                    };
-                }
-            });
+                await new Promise<void>((resolve) => {
+                    const unsubscribe = onAuthStateChanged(
+                        this.authInstance!,
+                        (user) => {
+                            this.user = user;
+                            this.loading = false;
+                            this.initialized = true;
+                            resolve();
+                        },
+                        ((error: Error) => {
+                            console.error("Auth state change error:", error);
+                            this.loading = false;
+                            this.error =
+                                "An error occurred during authentication";
+                            this.initialized = true;
+                            resolve();
+                        }) as ErrorFn
+                    );
+
+                    // Unsubscribe when component is unmounted
+                    if (process.client) {
+                        window.onbeforeunload = () => {
+                            unsubscribe();
+                        };
+                    }
+                });
+            } catch (error) {
+                console.error("Auth initialization error:", error);
+                this.loading = false;
+                this.initialized = true;
+                throw error;
+            }
         },
 
-        async signIn(email: string, password: string) {
+        async signIn(
+            email: string,
+            password: string,
+            rememberMe: boolean = false
+        ) {
+            if (!this.authInstance) throw new Error("Auth not initialized");
+
             try {
                 this.error = null;
                 this.loading = true;
-                const { $auth } = useNuxtApp();
-                if (!$auth) throw new Error("Auth not initialized");
+
+                // Set persistence based on remember me option
+                await setPersistence(
+                    this.authInstance,
+                    rememberMe
+                        ? browserLocalPersistence
+                        : browserSessionPersistence
+                );
 
                 const userCredential = await signInWithEmailAndPassword(
-                    $auth,
+                    this.authInstance,
                     email,
                     password
                 );
                 this.user = userCredential.user;
                 return this.user;
-            } catch (error: any) {
-                this.handleAuthError(error);
+            } catch (error) {
+                this.handleAuthError(error as AuthError);
                 throw error;
             } finally {
                 this.loading = false;
@@ -78,18 +136,21 @@ export const useAuthStore = defineStore("auth", {
         },
 
         async signInWithGoogle() {
+            if (!this.authInstance) throw new Error("Auth not initialized");
+
             try {
                 this.error = null;
                 this.loading = true;
-                const { $auth } = useNuxtApp();
-                if (!$auth) throw new Error("Auth not initialized");
 
                 const provider = new GoogleAuthProvider();
-                const userCredential = await signInWithPopup($auth, provider);
+                const userCredential = await signInWithPopup(
+                    this.authInstance,
+                    provider
+                );
                 this.user = userCredential.user;
                 return this.user;
-            } catch (error: any) {
-                this.handleAuthError(error);
+            } catch (error) {
+                this.handleAuthError(error as AuthError);
                 throw error;
             } finally {
                 this.loading = false;
@@ -97,18 +158,21 @@ export const useAuthStore = defineStore("auth", {
         },
 
         async signInWithGithub() {
+            if (!this.authInstance) throw new Error("Auth not initialized");
+
             try {
                 this.error = null;
                 this.loading = true;
-                const { $auth } = useNuxtApp();
-                if (!$auth) throw new Error("Auth not initialized");
 
                 const provider = new GithubAuthProvider();
-                const userCredential = await signInWithPopup($auth, provider);
+                const userCredential = await signInWithPopup(
+                    this.authInstance,
+                    provider
+                );
                 this.user = userCredential.user;
                 return this.user;
-            } catch (error: any) {
-                this.handleAuthError(error);
+            } catch (error) {
+                this.handleAuthError(error as AuthError);
                 throw error;
             } finally {
                 this.loading = false;
@@ -116,21 +180,21 @@ export const useAuthStore = defineStore("auth", {
         },
 
         async signUp(email: string, password: string) {
+            if (!this.authInstance) throw new Error("Auth not initialized");
+
             try {
                 this.error = null;
                 this.loading = true;
-                const { $auth } = useNuxtApp();
-                if (!$auth) throw new Error("Auth not initialized");
 
                 const userCredential = await createUserWithEmailAndPassword(
-                    $auth,
+                    this.authInstance,
                     email,
                     password
                 );
                 this.user = userCredential.user;
                 return this.user;
-            } catch (error: any) {
-                this.handleAuthError(error);
+            } catch (error) {
+                this.handleAuthError(error as AuthError);
                 throw error;
             } finally {
                 this.loading = false;
@@ -138,56 +202,95 @@ export const useAuthStore = defineStore("auth", {
         },
 
         async signOut() {
+            if (!this.authInstance) throw new Error("Auth not initialized");
+
             try {
                 this.loading = true;
-                const { $auth } = useNuxtApp();
-                if (!$auth) throw new Error("Auth not initialized");
-
-                await firebaseSignOut($auth);
+                await firebaseSignOut(this.authInstance);
                 this.user = null;
-            } catch (error: any) {
-                this.handleAuthError(error);
+            } catch (error) {
+                this.handleAuthError(error as AuthError);
                 throw error;
             } finally {
                 this.loading = false;
             }
         },
 
-        handleAuthError(error: any) {
-            console.error("Auth error:", error);
-            this.error = this.getReadableErrorMessage(error);
+        async sendPasswordResetEmail(email: string) {
+            if (!this.authInstance) throw new Error("Auth not initialized");
+
+            try {
+                await sendPasswordResetEmail(this.authInstance, email);
+            } catch (error) {
+                throw new Error(
+                    this.getErrorMessage((error as AuthError).code)
+                );
+            }
         },
 
-        getReadableErrorMessage(error: any): string {
-            const code = error.code;
+        async confirmPasswordReset(oobCode: string, newPassword: string) {
+            if (!this.authInstance) throw new Error("Auth not initialized");
+
+            try {
+                await confirmPasswordReset(
+                    this.authInstance,
+                    oobCode,
+                    newPassword
+                );
+            } catch (error) {
+                throw new Error(
+                    this.getErrorMessage((error as AuthError).code)
+                );
+            }
+        },
+
+        handleAuthError(error: AuthError) {
+            console.error("Auth error:", error);
+            this.error = this.getErrorMessage(error.code);
+        },
+
+        getErrorMessage(code: string): string {
             switch (code) {
                 case "auth/email-already-in-use":
-                    return "This email is already registered. Please try logging in.";
+                    return "This email is already registered. Please sign in or use a different email.";
                 case "auth/invalid-email":
-                    return "Please enter a valid email address.";
+                    return "Invalid email address. Please check and try again.";
                 case "auth/operation-not-allowed":
-                    return "Email/password accounts are not enabled. Please contact support.";
+                    return "This sign-in method is not enabled. Please contact support.";
                 case "auth/weak-password":
-                    return "Please choose a stronger password.";
+                    return "Password is too weak. Please use a stronger password.";
                 case "auth/user-disabled":
                     return "This account has been disabled. Please contact support.";
                 case "auth/user-not-found":
+                    return "No account found with this email. Please sign up.";
                 case "auth/wrong-password":
-                    return "Invalid email or password.";
-                case "auth/too-many-requests":
-                    return "Too many attempts. Please try again later.";
-                case "auth/network-request-failed":
-                    return "Network error. Please check your connection.";
+                    return "Incorrect password. Please try again.";
                 case "auth/popup-closed-by-user":
-                    return "Sign in was cancelled. Please try again.";
+                    return "Sign-in popup was closed before completion. Please try again.";
                 case "auth/cancelled-popup-request":
-                    return "Only one sign in window can be open at a time.";
+                    return "The sign-in process was cancelled. Please try again.";
                 case "auth/popup-blocked":
-                    return "Sign in popup was blocked. Please allow popups for this site.";
-                case "auth/account-exists-with-different-credential":
-                    return "An account already exists with this email but with different sign in credentials.";
+                    return "Sign-in popup was blocked by your browser. Please allow popups and try again.";
                 default:
-                    return error.message || "An unexpected error occurred.";
+                    return "An error occurred. Please try again.";
+            }
+        },
+
+        async refreshToken() {
+            if (this.isTokenRefreshing || !this.user) return;
+
+            try {
+                this.isTokenRefreshing = true;
+                const token = await this.user.getIdToken(true);
+                if (process.client) {
+                    localStorage.setItem("auth_token", token);
+                }
+                return token;
+            } catch (error) {
+                console.error("Token refresh error:", error);
+                throw error;
+            } finally {
+                this.isTokenRefreshing = false;
             }
         },
     },
