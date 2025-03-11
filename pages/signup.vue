@@ -5,7 +5,7 @@
             <CardHeader class="text-center">
                 <CardTitle class="text-xl">Create an account</CardTitle>
                 <CardDescription>
-                    Enter your details to get started
+                    Sign up to start managing your expenses
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -53,24 +53,26 @@
                         </div>
                         <div class="grid gap-4">
                             <div class="grid gap-2">
+                                <Label html-for="name">Full Name</Label>
+                                <Input
+                                    id="name"
+                                    v-model="form.name"
+                                    type="text"
+                                    placeholder="Enter your name"
+                                    required
+                                    :disabled="loading"
+                                />
+                            </div>
+                            <div class="grid gap-2">
                                 <Label html-for="email">Email</Label>
                                 <Input
                                     id="email"
                                     v-model="form.email"
                                     type="email"
-                                    placeholder="name@example.com"
+                                    placeholder="Enter your email"
                                     required
                                     :disabled="loading"
-                                    :class="{
-                                        'border-destructive': errors.email,
-                                    }"
                                 />
-                                <p
-                                    v-if="errors.email"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ errors.email }}
-                                </p>
                             </div>
                             <div class="grid gap-2">
                                 <Label html-for="password">Password</Label>
@@ -78,16 +80,12 @@
                                     <Input
                                         id="password"
                                         v-model="form.password"
+                                        placeholder="Create a password"
                                         :type="
                                             showPassword ? 'text' : 'password'
                                         "
-                                        placeholder="At least 8 characters"
                                         required
                                         :disabled="loading"
-                                        :class="{
-                                            'border-destructive':
-                                                errors.password,
-                                        }"
                                         class="pr-10"
                                     />
                                     <button
@@ -102,12 +100,6 @@
                                         <EyeOff v-else class="h-4 w-4" />
                                     </button>
                                 </div>
-                                <p
-                                    v-if="errors.password"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ errors.password }}
-                                </p>
                             </div>
                             <div class="grid gap-2">
                                 <Label html-for="confirmPassword"
@@ -117,18 +109,14 @@
                                     <Input
                                         id="confirmPassword"
                                         v-model="form.confirmPassword"
+                                        placeholder="Confirm your password"
                                         :type="
                                             showConfirmPassword
                                                 ? 'text'
                                                 : 'password'
                                         "
-                                        placeholder="Re-enter your password"
                                         required
                                         :disabled="loading"
-                                        :class="{
-                                            'border-destructive':
-                                                errors.confirmPassword,
-                                        }"
                                         class="pr-10"
                                     />
                                     <button
@@ -146,50 +134,11 @@
                                         <EyeOff v-else class="h-4 w-4" />
                                     </button>
                                 </div>
-                                <p
-                                    v-if="errors.confirmPassword"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ errors.confirmPassword }}
-                                </p>
                             </div>
-                            <div class="flex items-center space-x-2">
-                                <Checkbox
-                                    id="terms"
-                                    v-model="form.acceptTerms"
-                                    :disabled="loading"
-                                    required
-                                    :class="{
-                                        'border-destructive':
-                                            errors.acceptTerms,
-                                    }"
-                                />
-                                <Label
-                                    for="terms"
-                                    class="text-sm font-medium"
-                                    :class="{
-                                        'text-destructive': errors.acceptTerms,
-                                    }"
-                                >
-                                    I accept the
-                                    <NuxtLink
-                                        to="/terms"
-                                        class="text-primary hover:text-primary/80 transition-colors"
-                                    >
-                                        terms and conditions
-                                    </NuxtLink>
-                                </Label>
-                            </div>
-                            <p
-                                v-if="errors.acceptTerms"
-                                class="text-sm text-destructive"
-                            >
-                                {{ errors.acceptTerms }}
-                            </p>
                         </div>
                         <Button
                             type="submit"
-                            :disabled="loading || !isFormValid"
+                            :disabled="loading"
                             class="w-full"
                         >
                             <template v-if="loading">
@@ -198,7 +147,7 @@
                             </template>
                             <template v-else>
                                 <UserPlus class="mr-2 h-4 w-4" />
-                                Create Account
+                                Sign Up
                             </template>
                         </Button>
                     </div>
@@ -232,24 +181,23 @@ import {
     Loader2,
     UserPlus,
 } from "lucide-vue-next";
+import { useToast } from "~/components/ui/toast/use-toast";
 import { useAuthStore } from "~/stores/auth";
 
 definePageMeta({
     layout: "auth",
     middleware: "auth",
-    meta: {
-        guest: true,
-    },
 });
 
 const authStore = useAuthStore();
+const { toast } = useToast();
 const router = useRouter();
 
 const form = reactive({
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    acceptTerms: false,
 });
 
 const loading = ref(false);
@@ -257,77 +205,36 @@ const error = ref("");
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 
-const errors = reactive({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    acceptTerms: "",
-});
+const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    if (loading.value) return;
 
-const validateForm = () => {
-    let isValid = true;
-    errors.email = "";
-    errors.password = "";
-    errors.confirmPassword = "";
-    errors.acceptTerms = "";
-
-    // Email validation
-    if (!form.email) {
-        errors.email = "Email is required";
-        isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-        errors.email = "Please enter a valid email address";
-        isValid = false;
+    if (form.password !== form.confirmPassword) {
+        error.value = "Passwords do not match";
+        toast({
+            title: "Error",
+            description: "Passwords do not match",
+            variant: "destructive",
+        });
+        return;
     }
-
-    // Password validation
-    if (!form.password) {
-        errors.password = "Password is required";
-        isValid = false;
-    } else if (form.password.length < 8) {
-        errors.password = "Password must be at least 8 characters long";
-        isValid = false;
-    }
-
-    // Confirm password validation
-    if (!form.confirmPassword) {
-        errors.confirmPassword = "Please confirm your password";
-        isValid = false;
-    } else if (form.password !== form.confirmPassword) {
-        errors.confirmPassword = "Passwords do not match";
-        isValid = false;
-    }
-
-    // Terms acceptance validation
-    if (!form.acceptTerms) {
-        errors.acceptTerms = "You must accept the terms and conditions";
-        isValid = false;
-    }
-
-    return isValid;
-};
-
-const isFormValid = computed(() => {
-    return (
-        form.email &&
-        form.password &&
-        form.confirmPassword &&
-        form.password === form.confirmPassword &&
-        form.acceptTerms
-    );
-});
-
-const handleSubmit = async () => {
-    if (!validateForm() || loading.value) return;
 
     try {
         loading.value = true;
         error.value = "";
-        await authStore.signUp(form.email, form.password);
+        await authStore.signUp(form.email, form.password, form.name);
+        toast({
+            title: "Success",
+            description: "Account created successfully",
+        });
         router.push("/dashboard");
     } catch (err: any) {
-        error.value =
-            err.message || "Failed to create account. Please try again.";
+        error.value = err.message;
+        toast({
+            title: "Error",
+            description: err.message || "Failed to create account",
+            variant: "destructive",
+        });
     } finally {
         loading.value = false;
     }
@@ -342,8 +249,12 @@ const handleGoogleSignIn = async () => {
         await authStore.signInWithGoogle();
         router.push("/dashboard");
     } catch (err: any) {
-        error.value =
-            err.message || "Failed to sign in with Google. Please try again.";
+        error.value = err.message;
+        toast({
+            title: "Error",
+            description: err.message || "Failed to sign in with Google",
+            variant: "destructive",
+        });
     } finally {
         loading.value = false;
     }
@@ -358,8 +269,12 @@ const handleGithubSignIn = async () => {
         await authStore.signInWithGithub();
         router.push("/dashboard");
     } catch (err: any) {
-        error.value =
-            err.message || "Failed to sign in with GitHub. Please try again.";
+        error.value = err.message;
+        toast({
+            title: "Error",
+            description: err.message || "Failed to sign in with GitHub",
+            variant: "destructive",
+        });
     } finally {
         loading.value = false;
     }

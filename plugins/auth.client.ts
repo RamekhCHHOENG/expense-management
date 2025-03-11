@@ -1,37 +1,31 @@
+import type { Auth } from 'firebase/auth';
 import { useAuthStore } from '~/stores/auth';
 
 export default defineNuxtPlugin({
     name: 'auth',
     enforce: 'post',
     async setup(nuxtApp) {
-        const authStore = useAuthStore()
+        // Wait for next tick to ensure Firebase is initialized
+        await nextTick();
         
-        // Get the Firebase auth instance from Nuxt's provide system
-        const { $firebaseAuth } = useNuxtApp()
+        const { $firebaseAuth, $firebaseFirestore } = nuxtApp;
         
-        if (!$firebaseAuth) {
-            console.error('Firebase Auth not initialized')
-            return {
-                provide: {
-                    auth: authStore
-                }
-            }
+        // Ensure both Auth and Firestore are initialized
+        if (!$firebaseAuth || !$firebaseFirestore) {
+            throw new Error('Firebase services not properly initialized');
         }
         
-        // Set the auth instance in the store
-        authStore.setAuth($firebaseAuth)
-        
-        // Initialize the auth store immediately since Firebase is already initialized
         try {
-            await authStore.init()
+            const authStore = useAuthStore();
+            
+            // Set the auth instance
+            authStore.setAuth($firebaseAuth as Auth);
+            
+            // Initialize auth state
+            await authStore.init();
         } catch (error) {
-            console.error('Error initializing auth:', error)
-        }
-
-        return {
-            provide: {
-                auth: authStore
-            }
+            console.error('Error initializing auth:', error);
+            throw error;
         }
     }
 });

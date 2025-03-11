@@ -1,59 +1,61 @@
+import type { Analytics } from "firebase/analytics";
 import { getAnalytics } from "firebase/analytics";
-import { initializeApp, type FirebaseOptions } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import { initializeApp } from "firebase/app";
+import type { Auth } from "firebase/auth";
+import { getAuth } from "firebase/auth";
+import type { Firestore } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 import type { InjectionKey } from "vue";
 
-// Define injection keys
+// Injection keys for Firebase services
 export const FirebaseKey: InjectionKey<ReturnType<typeof initializeApp>> =
-    Symbol("Firebase");
-export const AuthKey: InjectionKey<Auth> = Symbol("Auth");
-export const FirestoreKey: InjectionKey<Firestore> = Symbol("Firestore");
-export const AnalyticsKey: InjectionKey<any> = Symbol("Analytics");
+    Symbol("firebase-app");
+export const AuthKey: InjectionKey<Auth> = Symbol("firebase-auth");
+export const FirestoreKey: InjectionKey<Firestore> =
+    Symbol("firebase-firestore");
+export const AnalyticsKey: InjectionKey<Analytics> =
+    Symbol("firebase-analytics");
 
-// Initialize Firebase outside the plugin to ensure it's available immediately
-let firebaseApp: ReturnType<typeof initializeApp> | null = null;
-let auth: Auth | null = null;
-let firestore: Firestore | null = null;
-let analytics: any = null;
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyBcpxqsx5fhi5Iiis7LS0YJHQY1Q8ClJes",
+    authDomain: "expense-management-b84bc.firebaseapp.com",
+    projectId: "expense-management-b84bc",
+    storageBucket: "expense-management-b84bc.firebasestorage.app",
+    messagingSenderId: "721998265859",
+    appId: "1:721998265859:web:cc220b9a328b40d952d836",
+    measurementId: "G-NT7GQ1P5M6",
+};
 
 export default defineNuxtPlugin({
     name: "firebase",
     enforce: "pre",
     async setup(nuxtApp) {
-        // Only initialize once
-        if (!firebaseApp) {
-            const config = useRuntimeConfig();
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const firestore = getFirestore(app);
+        let analytics;
 
-            try {
-                // Validate Firebase config
-                const firebaseConfig = config.public
-                    .firebase as FirebaseOptions;
-                if (!firebaseConfig.apiKey) {
-                    throw new Error(
-                        "Firebase API key is missing. Please check your environment variables."
-                    );
-                }
-
-                // Initialize Firebase
-                firebaseApp = initializeApp(firebaseConfig);
-                auth = getAuth(firebaseApp);
-                firestore = getFirestore(firebaseApp);
-
-                if (process.client) {
-                    analytics = getAnalytics(firebaseApp);
-                }
-            } catch (error) {
-                console.error("Firebase initialization error:", error);
-                throw error;
-            }
+        // Only initialize analytics on client-side
+        if (process.client) {
+            analytics = getAnalytics(app);
         }
 
+        // Provide Firebase services to the Vue app
+        nuxtApp.vueApp.provide(FirebaseKey, app);
+        nuxtApp.vueApp.provide(AuthKey, auth);
+        nuxtApp.vueApp.provide(FirestoreKey, firestore);
+        if (analytics) {
+            nuxtApp.vueApp.provide(AnalyticsKey, analytics);
+        }
+
+        // Also provide to Nuxt app for composition API usage
         return {
             provide: {
-                firebaseApp: firebaseApp!,
-                firebaseAuth: auth!,
-                firebaseFirestore: firestore!,
+                firebaseApp: app,
+                firebaseAuth: auth,
+                firebaseFirestore: firestore,
                 firebaseAnalytics: analytics,
             },
         };

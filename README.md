@@ -44,7 +44,7 @@ const analytics = getAnalytics(app);
 
 - remember to use shadcn vue and make ui elegent for modern beautiful and functionality
 - make all component reusable and store neccessary constant in constant folder.
--
+- use bun as always
 
 //Shadcnvue document
 https://www.shadcn-vue.com/

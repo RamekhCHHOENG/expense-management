@@ -74,7 +74,7 @@ const unreadNotifications = computed(
 );
 
 const handleProfile = () => {
-    router.push("/profile");
+    router.push("/users/profile");
 };
 
 const handleSettings = () => {

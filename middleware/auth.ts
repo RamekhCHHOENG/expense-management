@@ -1,5 +1,13 @@
 import { useAuthStore } from "~/stores/auth";
 
+// List of public routes that don't require authentication
+const publicRoutes = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+];
+
 export default defineNuxtRouteMiddleware(async (to) => {
     const authStore = useAuthStore();
 
@@ -14,32 +22,24 @@ export default defineNuxtRouteMiddleware(async (to) => {
             await authStore.init();
         } catch (error) {
             console.error("Auth initialization error:", error);
-            // Only redirect to login if not already on login page
-            if (to.path !== "/login") {
+            // Only redirect to login if not on a public route
+            if (!publicRoutes.includes(to.path)) {
                 return navigateTo("/login");
             }
             return;
         }
     }
 
-    // Get the auth requirement from the route meta
-    const requiresAuth = !to.meta.guest;
+    // Check if the route is public
+    const isPublicRoute = publicRoutes.includes(to.path);
 
-    // If route requires authentication and user is not authenticated
-    if (requiresAuth && !authStore.isAuthenticated) {
-        // Only redirect to login if not already on login page
-        if (to.path !== "/login") {
-            return navigateTo("/login");
-        }
-        return;
+    // If route requires authentication (not public) and user is not authenticated
+    if (!isPublicRoute && !authStore.isAuthenticated) {
+        return navigateTo("/login");
     }
 
-    // If route is for guests only (like login) and user is authenticated
-    if (!requiresAuth && authStore.isAuthenticated) {
-        // Only redirect to dashboard if not already on dashboard
-        if (to.path !== "/dashboard") {
-            return navigateTo("/dashboard");
-        }
-        return;
+    // If user is authenticated and trying to access auth pages (login, signup, etc.)
+    if (authStore.isAuthenticated && isPublicRoute) {
+        return navigateTo("/dashboard");
     }
 });
