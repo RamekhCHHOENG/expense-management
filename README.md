@@ -45,6 +45,7 @@ const analytics = getAnalytics(app);
 - remember to use shadcn vue and make ui elegent for modern beautiful and functionality
 - make all component reusable and store neccessary constant in constant folder.
 - use bun as always
+- always broken down each feature to small junk if it is component then put it in folder components/ just like feature user as example
 
 //Shadcnvue document
 https://www.shadcn-vue.com/
