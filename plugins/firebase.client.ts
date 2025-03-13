@@ -15,6 +15,7 @@ export const FirestoreKey: InjectionKey<Firestore> =
     Symbol("firebase-firestore");
 export const AnalyticsKey: InjectionKey<Analytics> =
     Symbol("firebase-analytics");
+export const FirebaseReadyKey: InjectionKey<boolean> = Symbol("firebase-ready");
 
 // Firebase configuration
 const firebaseConfig = {
@@ -31,33 +32,57 @@ export default defineNuxtPlugin({
     name: "firebase",
     enforce: "pre",
     async setup(nuxtApp) {
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const firestore = getFirestore(app);
-        let analytics;
+        try {
+            console.log("Initializing Firebase...");
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
 
-        // Only initialize analytics on client-side
-        if (process.client) {
-            analytics = getAnalytics(app);
+            // Initialize services
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            let analytics = null;
+
+            console.log("Firebase services initialized");
+
+            // Only initialize analytics on client-side
+            if (process.client) {
+                analytics = getAnalytics(app);
+            }
+
+            // Wait for auth to be ready
+            await new Promise<void>((resolve) => {
+                const unsubscribe = auth.onAuthStateChanged(() => {
+                    unsubscribe();
+                    resolve();
+                });
+            });
+
+            console.log("Auth state ready");
+
+            // Provide services using Vue's provide/inject pattern
+            nuxtApp.vueApp.provide(FirebaseKey, app);
+            nuxtApp.vueApp.provide(AuthKey, auth);
+            nuxtApp.vueApp.provide(FirestoreKey, db);
+            nuxtApp.vueApp.provide(FirebaseReadyKey, true);
+            if (analytics) {
+                nuxtApp.vueApp.provide(AnalyticsKey, analytics);
+            }
+
+            console.log("Firebase services provided to Vue app");
+
+            // Also provide through Nuxt's plugin system
+            return {
+                provide: {
+                    firebaseApp: app,
+                    firebaseAuth: auth,
+                    firebaseDb: db,
+                    firebaseAnalytics: analytics,
+                    firebaseReady: true,
+                },
+            };
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            throw error;
         }
-
-        // Provide Firebase services to the Vue app
-        nuxtApp.vueApp.provide(FirebaseKey, app);
-        nuxtApp.vueApp.provide(AuthKey, auth);
-        nuxtApp.vueApp.provide(FirestoreKey, firestore);
-        if (analytics) {
-            nuxtApp.vueApp.provide(AnalyticsKey, analytics);
-        }
-
-        // Also provide to Nuxt app for composition API usage
-        return {
-            provide: {
-                firebaseApp: app,
-                firebaseAuth: auth,
-                firebaseFirestore: firestore,
-                firebaseAnalytics: analytics,
-            },
-        };
     },
 });

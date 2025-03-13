@@ -1,3 +1,6 @@
+- alway use bun
+- junk each file to smaller pease and put it in components
+
 1. Features to Include
    🔹 User Authentication – Login/signup with email or social auth.
    🔹 Dashboard – A summary of total income, expenses, and savings.

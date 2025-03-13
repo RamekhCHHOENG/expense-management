@@ -109,7 +109,7 @@ export class UserService {
 // Create a composable to use the UserService
 export const useUserService = () => {
     const nuxtApp = useNuxtApp();
-    const firestore = nuxtApp.$firebaseFirestore;
+    const firestore = nuxtApp.$firebaseDb;
 
     if (!firestore) {
         throw new Error("Firestore not initialized");
