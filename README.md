@@ -1,4 +1,5 @@
 - alway use bun
+- alway scan all code in project to getter understanding
 - junk each file to smaller pease and put it in components
 
 1. Features to Include

@@ -4,10 +4,9 @@
             <!-- Date -->
             <div class="form-group">
                 <Label for="date">Date</Label>
-                <Input
+                <DatePicker
                     id="date"
                     v-model="formData.date"
-                    type="date"
                     :disabled="disabled"
                     :class="{ 'border-red-500': errors.date }"
                 />
@@ -144,6 +143,7 @@
 
 <script setup lang="ts">
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { computed, onMounted, ref } from "vue";

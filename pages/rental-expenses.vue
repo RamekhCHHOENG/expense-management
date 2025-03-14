@@ -1,25 +1,26 @@
 <template>
     <div class="container mx-auto p-4">
-        <!-- <Card class="mb-8">
+        <Card class="mb-8">
             <CardHeader>
-                <CardTitle>Rental House Expenses</CardTitle>
-                <CardDescription>
-                    Manage your rental house expenses and payments
-                </CardDescription>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <CardTitle>Rental House Expenses</CardTitle>
+                        <CardDescription>
+                            Manage your rental house expenses and payments
+                        </CardDescription>
+                    </div>
+                    <Button @click="openCreateDialog">
+                        <PlusIcon class="mr-2 h-4 w-4" />
+                        Create Expense
+                    </Button>
+                </div>
             </CardHeader>
-            <CardContent>
-                <ExpenseForm @submit="addExpense" />
-            </CardContent>
-        </Card> -->
+        </Card>
 
         <Card>
             <CardHeader>
                 <div class="flex items-center justify-between">
                     <CardTitle>Expense History</CardTitle>
-                    <Button variant="outline" @click="importCSVData">
-                        <ArrowUpTrayIcon class="mr-2 h-4 w-4" />
-                        Import Data
-                    </Button>
                 </div>
             </CardHeader>
             <CardContent>
@@ -36,6 +37,25 @@
         </Card>
     </div>
 
+    <!-- Create/Edit Dialog -->
+    <Dialog
+        :open="isCreateDialogOpen"
+        @update:open="isCreateDialogOpen = $event"
+    >
+        <DialogContent class="sm:max-w-[600px]">
+            <DialogHeader>
+                <DialogTitle>Create Expense</DialogTitle>
+                <DialogDescription>
+                    Add a new expense record
+                </DialogDescription>
+            </DialogHeader>
+            <div class="grid gap-4 py-4">
+                <ExpenseForm @submit="handleCreate" />
+            </div>
+        </DialogContent>
+    </Dialog>
+
+    <!-- View Dialog -->
     <ExpenseView
         v-if="selectedExpense"
         :expense="selectedExpense"
@@ -46,6 +66,7 @@
         @cancel-edit="handleCancelEdit"
     />
 
+    <!-- Delete Dialog -->
     <ExpenseDelete
         v-if="expenseToDelete"
         :expense="expenseToDelete"
@@ -55,15 +76,29 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowUpTrayIcon } from "@heroicons/vue/20/solid";
+import { PlusIcon } from "@heroicons/vue/20/solid";
 import { onMounted, ref } from "vue";
 import { useExpenses } from "~/composables/useExpenses";
 import type { Expense } from "~/types/expense";
 
 // Import components
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import ExpenseDelete from "~/components/rental-expenses/expense-delete.vue";
+import ExpenseForm from "~/components/rental-expenses/expense-form.vue";
 import ExpenseList from "~/components/rental-expenses/expense-list.vue";
 import ExpenseView from "~/components/rental-expenses/expense-view.vue";
 
@@ -83,6 +118,17 @@ const expenseToDelete = ref<Expense | null>(null);
 const isViewDialogOpen = ref(false);
 const isDeleteDialogOpen = ref(false);
 const isEditMode = ref(false);
+const isCreateDialogOpen = ref(false);
+
+const openCreateDialog = () => {
+    isCreateDialogOpen.value = true;
+};
+
+const handleCreate = async (expense: Expense) => {
+    await addExpense(expense);
+    isCreateDialogOpen.value = false;
+    await fetchExpenses();
+};
 
 const handleOptionChange = async (options: any) => {
     console.log("Fetching expenses with options:", options);
@@ -123,11 +169,6 @@ const deleteExpense = async (expense: Expense) => {
     await removeExpense(expense);
     expenseToDelete.value = null;
     isDeleteDialogOpen.value = false;
-};
-
-const importCSVData = async () => {
-    // Import functionality can be added here
-    console.log("Import CSV data");
 };
 
 const expsenData = [
