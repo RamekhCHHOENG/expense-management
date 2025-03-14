@@ -1,13 +1,14 @@
 <template>
-    <form @submit.prevent="handleSubmit" class="space-y-4">
+    <form id="expense-form" @submit.prevent="handleSubmit" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Date -->
             <div class="form-group">
                 <Label for="date">Date</Label>
                 <Input
                     id="date"
-                    v-model="form.date"
+                    v-model="formData.date"
                     type="date"
+                    :disabled="disabled"
                     :class="{ 'border-red-500': errors.date }"
                 />
                 <span v-if="errors.date" class="text-sm text-red-500">{{
@@ -20,9 +21,10 @@
                 <Label for="house">House Rent</Label>
                 <Input
                     id="house"
-                    v-model="form.house"
+                    v-model="formData.house"
                     type="number"
                     step="0.01"
+                    :disabled="disabled"
                     :class="{ 'border-red-500': errors.house }"
                 />
                 <span v-if="errors.house" class="text-sm text-red-500">{{
@@ -35,9 +37,10 @@
                 <Label for="totalElect">Total Electricity</Label>
                 <Input
                     id="totalElect"
-                    v-model="form.totalElect"
+                    v-model="formData.totalElect"
                     type="number"
                     step="0.01"
+                    :disabled="disabled"
                 />
             </div>
 
@@ -46,9 +49,10 @@
                 <Label for="rtAcFridge">RT AC & Fridge</Label>
                 <Input
                     id="rtAcFridge"
-                    v-model="form.rtAcFridge"
+                    v-model="formData.rtAcFridge"
                     type="number"
                     step="0.01"
+                    :disabled="disabled"
                 />
             </div>
 
@@ -57,9 +61,10 @@
                 <Label for="pheaFridge">Phea Fridge</Label>
                 <Input
                     id="pheaFridge"
-                    v-model="form.pheaFridge"
+                    v-model="formData.pheaFridge"
                     type="number"
                     step="0.01"
+                    :disabled="disabled"
                 />
             </div>
 
@@ -68,9 +73,10 @@
                 <Label for="mining">Mining</Label>
                 <Input
                     id="mining"
-                    v-model="form.mining"
+                    v-model="formData.mining"
                     type="number"
                     step="0.01"
+                    :disabled="disabled"
                 />
             </div>
 
@@ -79,9 +85,10 @@
                 <Label for="electricity">Electricity</Label>
                 <Input
                     id="electricity"
-                    v-model="form.electricity"
+                    v-model="formData.electricity"
                     type="number"
                     step="0.01"
+                    :disabled="disabled"
                     :class="{ 'border-red-500': errors.electricity }"
                 />
                 <span v-if="errors.electricity" class="text-sm text-red-500">{{
@@ -94,9 +101,10 @@
                 <Label for="water">Water</Label>
                 <Input
                     id="water"
-                    v-model="form.water"
+                    v-model="formData.water"
                     type="number"
                     step="0.01"
+                    :disabled="disabled"
                 />
             </div>
 
@@ -105,9 +113,10 @@
                 <Label for="waste">Waste</Label>
                 <Input
                     id="waste"
-                    v-model="form.waste"
+                    v-model="formData.waste"
                     type="number"
                     step="0.01"
+                    :disabled="disabled"
                 />
             </div>
 
@@ -116,18 +125,17 @@
                 <Label for="additional">Additional</Label>
                 <Input
                     id="additional"
-                    v-model="form.additional"
+                    v-model="formData.additional"
                     type="number"
                     step="0.01"
+                    :disabled="disabled"
                 />
             </div>
         </div>
 
-        <div class="flex justify-end space-x-2">
+        <div v-if="!disabled" class="flex justify-end space-x-2">
             <Button type="submit" :disabled="isSubmitting">
-                {{
-                    isSubmitting ? "Saving..." : expense ? "Update" : "Add"
-                }}
+                {{ isSubmitting ? "Saving..." : expense ? "Update" : "Add" }}
                 Expense
             </Button>
         </div>
@@ -138,7 +146,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 interface Expense {
     id?: string;
@@ -158,25 +166,51 @@ interface Expense {
 
 interface Props {
     expense?: Expense;
+    disabled?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    disabled: false,
+});
+
 const emit = defineEmits<{
     (e: "submit", expense: Expense): void;
 }>();
 
-const form = ref<Expense>({
+const formData = ref({
     date: new Date().toISOString().split("T")[0],
-    house: 0,
-    totalElect: null,
-    rtAcFridge: null,
-    pheaFridge: null,
-    mining: null,
-    electricity: 0,
-    water: null,
-    waste: null,
-    additional: null,
+    house: "0",
+    totalElect: "",
+    rtAcFridge: "",
+    pheaFridge: "",
+    mining: "",
+    electricity: "0",
+    water: "",
+    waste: "",
+    additional: "",
 });
+
+// Computed properties to handle the conversion between string and number | null
+const form = computed<Expense>(() => ({
+    date: formData.value.date,
+    house: Number(formData.value.house),
+    totalElect: formData.value.totalElect
+        ? Number(formData.value.totalElect)
+        : null,
+    rtAcFridge: formData.value.rtAcFridge
+        ? Number(formData.value.rtAcFridge)
+        : null,
+    pheaFridge: formData.value.pheaFridge
+        ? Number(formData.value.pheaFridge)
+        : null,
+    mining: formData.value.mining ? Number(formData.value.mining) : null,
+    electricity: Number(formData.value.electricity),
+    water: formData.value.water ? Number(formData.value.water) : null,
+    waste: formData.value.waste ? Number(formData.value.waste) : null,
+    additional: formData.value.additional
+        ? Number(formData.value.additional)
+        : null,
+}));
 
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
@@ -204,40 +238,21 @@ const handleSubmit = async () => {
 
     isSubmitting.value = true;
     try {
-        emit("submit", {
-            ...form.value,
-            house: Number(form.value.house),
-            totalElect: form.value.totalElect
-                ? Number(form.value.totalElect)
-                : null,
-            rtAcFridge: form.value.rtAcFridge
-                ? Number(form.value.rtAcFridge)
-                : null,
-            pheaFridge: form.value.pheaFridge
-                ? Number(form.value.pheaFridge)
-                : null,
-            mining: form.value.mining ? Number(form.value.mining) : null,
-            electricity: Number(form.value.electricity),
-            water: form.value.water ? Number(form.value.water) : null,
-            waste: form.value.waste ? Number(form.value.waste) : null,
-            additional: form.value.additional
-                ? Number(form.value.additional)
-                : null,
-        });
+        emit("submit", form.value);
 
         if (!props.expense) {
             // Reset form if adding new expense
-            form.value = {
+            formData.value = {
                 date: new Date().toISOString().split("T")[0],
-                house: 0,
-                totalElect: null,
-                rtAcFridge: null,
-                pheaFridge: null,
-                mining: null,
-                electricity: 0,
-                water: null,
-                waste: null,
-                additional: null,
+                house: "0",
+                totalElect: "",
+                rtAcFridge: "",
+                pheaFridge: "",
+                mining: "",
+                electricity: "0",
+                water: "",
+                waste: "",
+                additional: "",
             };
         }
     } finally {
@@ -247,7 +262,18 @@ const handleSubmit = async () => {
 
 onMounted(() => {
     if (props.expense) {
-        form.value = { ...props.expense };
+        formData.value = {
+            date: props.expense.date,
+            house: props.expense.house.toString(),
+            totalElect: props.expense.totalElect?.toString() ?? "",
+            rtAcFridge: props.expense.rtAcFridge?.toString() ?? "",
+            pheaFridge: props.expense.pheaFridge?.toString() ?? "",
+            mining: props.expense.mining?.toString() ?? "",
+            electricity: props.expense.electricity.toString(),
+            water: props.expense.water?.toString() ?? "",
+            waste: props.expense.waste?.toString() ?? "",
+            additional: props.expense.additional?.toString() ?? "",
+        };
     }
 });
 </script>

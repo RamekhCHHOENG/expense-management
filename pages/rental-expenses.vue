@@ -1,6 +1,6 @@
 <template>
     <div class="container mx-auto p-4">
-        <Card class="mb-8">
+        <!-- <Card class="mb-8">
             <CardHeader>
                 <CardTitle>Rental House Expenses</CardTitle>
                 <CardDescription>
@@ -10,7 +10,7 @@
             <CardContent>
                 <ExpenseForm @submit="addExpense" />
             </CardContent>
-        </Card>
+        </Card> -->
 
         <Card>
             <CardHeader>
@@ -29,6 +29,7 @@
                     :loading="loading"
                     @option-change="handleOptionChange"
                     @view="handleView"
+                    @edit="handleEdit"
                     @delete="handleDelete"
                 />
             </CardContent>
@@ -38,8 +39,11 @@
     <ExpenseView
         v-if="selectedExpense"
         :expense="selectedExpense"
-        v-model:is-open="isViewDialogOpen"
+        :is-open="isViewDialogOpen"
+        :is-edit-mode="isEditMode"
+        @update:is-open="isViewDialogOpen = $event"
         @update="handleUpdate"
+        @cancel-edit="handleCancelEdit"
     />
 
     <ExpenseDelete
@@ -58,15 +62,8 @@ import type { Expense } from "~/types/expense";
 
 // Import components
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ExpenseDelete from "~/components/rental-expenses/expense-delete.vue";
-import ExpenseForm from "~/components/rental-expenses/expense-form.vue";
 import ExpenseList from "~/components/rental-expenses/expense-list.vue";
 import ExpenseView from "~/components/rental-expenses/expense-view.vue";
 
@@ -85,6 +82,7 @@ const selectedExpense = ref<Expense | null>(null);
 const expenseToDelete = ref<Expense | null>(null);
 const isViewDialogOpen = ref(false);
 const isDeleteDialogOpen = ref(false);
+const isEditMode = ref(false);
 
 const handleOptionChange = async (options: any) => {
     console.log("Fetching expenses with options:", options);
@@ -93,6 +91,13 @@ const handleOptionChange = async (options: any) => {
 
 const handleView = (expense: Expense) => {
     selectedExpense.value = expense;
+    isEditMode.value = false;
+    isViewDialogOpen.value = true;
+};
+
+const handleEdit = (expense: Expense) => {
+    selectedExpense.value = expense;
+    isEditMode.value = true;
     isViewDialogOpen.value = true;
 };
 
@@ -105,6 +110,13 @@ const handleUpdate = async (expense: Expense) => {
     await updateExpense(expense);
     selectedExpense.value = null;
     isViewDialogOpen.value = false;
+    isEditMode.value = false;
+};
+
+const handleCancelEdit = () => {
+    isEditMode.value = false;
+    isViewDialogOpen.value = false;
+    selectedExpense.value = null;
 };
 
 const deleteExpense = async (expense: Expense) => {

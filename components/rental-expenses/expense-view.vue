@@ -2,24 +2,43 @@
     <Dialog :open="isOpen" @update:open="$emit('update:is-open', $event)">
         <DialogContent class="sm:max-w-[600px]">
             <DialogHeader>
-                <DialogTitle>View Expense</DialogTitle>
+                <DialogTitle
+                    >{{ isEditMode ? "Edit" : "View" }} Expense</DialogTitle
+                >
                 <DialogDescription>
-                    View and edit expense details
+                    {{
+                        isEditMode
+                            ? "Edit expense details"
+                            : "View expense details"
+                    }}
                 </DialogDescription>
             </DialogHeader>
 
             <div class="grid gap-4 py-4">
-                <ExpenseForm :expense="expense" @submit="handleUpdate" />
+                <ExpenseForm
+                    :expense="expense"
+                    :disabled="!isEditMode"
+                    @submit="handleUpdate"
+                />
             </div>
+
+            <DialogFooter v-if="isEditMode">
+                <Button type="button" variant="outline" @click="cancelEdit"
+                    >Cancel</Button
+                >
+                <Button type="submit" form="expense-form">Save changes</Button>
+            </DialogFooter>
         </DialogContent>
     </Dialog>
 </template>
 
 <script setup lang="ts">
+import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -44,11 +63,13 @@ interface Expense {
 const props = defineProps<{
     expense: Expense;
     isOpen: boolean;
+    isEditMode: boolean;
 }>();
 
 const emit = defineEmits<{
     (e: "update:is-open", value: boolean): void;
     (e: "update", expense: Expense): void;
+    (e: "cancel-edit"): void;
 }>();
 
 const handleUpdate = (updatedExpense: Expense) => {
@@ -56,5 +77,9 @@ const handleUpdate = (updatedExpense: Expense) => {
         ...updatedExpense,
         id: props.expense.id,
     });
+};
+
+const cancelEdit = () => {
+    emit("cancel-edit");
 };
 </script>

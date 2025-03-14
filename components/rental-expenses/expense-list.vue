@@ -58,6 +58,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: "option-change", options: any): void;
     (e: "view", expense: Expense): void;
+    (e: "edit", expense: Expense): void;
     (e: "delete", expense: Expense): void;
 }>();
 
@@ -161,6 +162,7 @@ const columns = computed<ColumnDef<Expense>[]>(() => [
             props: {
                 expense: row.original,
                 onView: (expense: Expense) => emit("view", expense),
+                onEdit: (expense: Expense) => emit("edit", expense),
                 onDelete: (expense: Expense) => emit("delete", expense),
             },
         }),
