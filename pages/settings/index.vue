@@ -9,12 +9,12 @@
 </template>
 
 <script setup lang="ts">
-import { useAuthStore } from '~/stores/auth';
+import { useAuthStore } from "~/stores/auth";
 
 definePageMeta({
-    middleware: ['auth']
+    middleware: ["auth"],
 });
 
 const authStore = useAuthStore();
-const userEmail = computed(() => authStore.user?.email || '');
-</script> 
+const userEmail = computed(() => authStore.user?.email || "");
+</script>

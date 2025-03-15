@@ -207,8 +207,8 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed, onMounted, ref } from "vue";
 import * as z from "zod";
+import ExpenseSharingTable from "~/components/rental-expenses/expense-sharing/expense-sharing.vue";
 import type { ExpenseUser } from "~/types/expense";
-import ExpenseSharingTable from "./expense-sharing-table.vue";
 
 interface Props {
     expense?: {

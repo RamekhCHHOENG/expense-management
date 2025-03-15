@@ -1,4 +1,4 @@
-<!-- pages/categories.vue -->
+<!-- pages/categories/index.vue -->
 <template>
     <DashboardLayout>
         <div class="space-y-6">

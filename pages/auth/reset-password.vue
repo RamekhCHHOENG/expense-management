@@ -115,15 +115,14 @@
                     </CardContent>
                 </Card>
 
-                <div class="flex items-center justify-center gap-2">
-                    <Button
-                        variant="ghost"
-                        @click="router.push('/login')"
-                        class="text-sm text-muted-foreground hover:text-primary"
+                <div class="text-center text-sm text-muted-foreground">
+                    Remember your password?{" "}
+                    <NuxtLink
+                        to="/auth/login"
+                        class="font-medium text-primary hover:text-primary/80 transition-colors"
                     >
-                        <ArrowLeft class="mr-2 h-4 w-4" />
-                        Back to login
-                    </Button>
+                        Sign in
+                    </NuxtLink>
                 </div>
             </div>
         </div>
@@ -131,13 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-    AlertCircle,
-    ArrowLeft,
-    CheckCircle2,
-    Key,
-    Loader2,
-} from "lucide-vue-next";
+import { AlertCircle, CheckCircle2, Key, Loader2 } from "lucide-vue-next";
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -178,7 +171,7 @@ const handleSubmit = async () => {
         success.value = true;
         // Redirect to login after 2 seconds
         setTimeout(() => {
-            router.push("/login");
+            router.push("/auth/login");
         }, 2000);
     } catch (err: any) {
         error.value =

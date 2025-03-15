@@ -162,7 +162,7 @@ const handleGithubSignIn = async () => {
                                 <div class="flex items-center justify-between">
                                     <Label html-for="password">Password</Label>
                                     <NuxtLink
-                                        to="/forgot-password"
+                                        to="/auth/forgot-password"
                                         class="text-sm text-primary hover:text-primary/80 transition-colors"
                                     >
                                         Forgot password?
@@ -234,7 +234,7 @@ const handleGithubSignIn = async () => {
         <div class="text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
             <NuxtLink
-                to="/signup"
+                to="/auth/signup"
                 class="font-medium text-primary hover:text-primary/80 transition-colors"
             >
                 Sign up

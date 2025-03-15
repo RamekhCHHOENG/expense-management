@@ -9,10 +9,10 @@
 </template>
 
 <script setup lang="ts">
-import { useFinanceStore } from '~/stores/finance';
+import { useFinanceStore } from "~/stores/finance";
 
 definePageMeta({
-    middleware: ['auth']
+    middleware: ["auth"],
 });
 
 const financeStore = useFinanceStore();
@@ -21,16 +21,20 @@ const totalIncome = computed(() => financeStore.totalIncome);
 const totalExpenses = computed(() => financeStore.totalExpenses);
 
 const total = computed(() => totalIncome.value + totalExpenses.value);
-const incomePercentage = computed(() => total.value ? (totalIncome.value / total.value) * 100 : 0);
-const expensePercentage = computed(() => total.value ? (totalExpenses.value / total.value) * 100 : 0);
+const incomePercentage = computed(() =>
+    total.value ? (totalIncome.value / total.value) * 100 : 0
+);
+const expensePercentage = computed(() =>
+    total.value ? (totalExpenses.value / total.value) * 100 : 0
+);
 
 // Calculate top expense categories
 const topExpenseCategories = computed(() => {
     const categories = new Map<string, number>();
-    
+
     financeStore.transactions
-        .filter(t => t.type === 'expense')
-        .forEach(t => {
+        .filter((t) => t.type === "expense")
+        .forEach((t) => {
             categories.set(
                 t.category,
                 (categories.get(t.category) || 0) + t.amount
@@ -44,9 +48,9 @@ const topExpenseCategories = computed(() => {
 });
 
 const formatAmount = (amount: number) => {
-    return amount.toLocaleString('en-US', {
+    return amount.toLocaleString("en-US", {
         minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        maximumFractionDigits: 2,
     });
 };
-</script> 
+</script>

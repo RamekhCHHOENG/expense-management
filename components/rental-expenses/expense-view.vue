@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { DIALOG_SIZES } from "~/constants/dialog";
 import type { Expense } from "~/types/expense";
-import ExpenseForm from "./expense-form.vue";
+import ExpenseForm from "./expense-form/expense-form.vue";
 
 interface Props {
     expense?: Expense;

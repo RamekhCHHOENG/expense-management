@@ -2,10 +2,10 @@ import { useAuthStore } from "~/stores/auth";
 
 // List of public routes that don't require authentication
 const publicRoutes = [
-    "/login",
-    "/signup",
-    "/forgot-password",
-    "/reset-password",
+    "/auth/login",
+    "/auth/signup",
+    "/auth/forgot-password",
+    "/auth/reset-password",
 ];
 
 export default defineNuxtRouteMiddleware(async (to) => {

@@ -8,7 +8,11 @@
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form v-if="!emailSent" @submit.prevent="handleSubmit" class="space-y-4">
+                <form
+                    v-if="!emailSent"
+                    @submit.prevent="handleSubmit"
+                    class="space-y-4"
+                >
                     <div class="grid gap-2">
                         <Label html-for="email">Email</Label>
                         <Input
@@ -37,10 +41,15 @@
                         <Mail class="h-4 w-4" />
                         <AlertTitle>Check your email</AlertTitle>
                         <AlertDescription>
-                            We've sent you a password reset link. Please check your inbox.
+                            We've sent you a password reset link. Please check
+                            your inbox.
                         </AlertDescription>
                     </Alert>
-                    <Button variant="outline" class="w-full" @click="emailSent = false">
+                    <Button
+                        variant="outline"
+                        class="w-full"
+                        @click="emailSent = false"
+                    >
                         <Mail class="mr-2 h-4 w-4" />
                         Send another email
                     </Button>
@@ -54,25 +63,25 @@
             </CardContent>
         </Card>
         <div class="text-center text-sm text-muted-foreground">
+            Remember your password?{" "}
             <NuxtLink
-                to="/login"
-                class="inline-flex items-center font-medium text-primary hover:text-primary/80 transition-colors"
+                to="/auth/login"
+                class="font-medium text-primary hover:text-primary/80 transition-colors"
             >
-                <ArrowLeft class="mr-2 h-4 w-4" />
-                Back to login
+                Sign in
             </NuxtLink>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { AlertCircle, ArrowLeft, Loader2, Mail } from "lucide-vue-next";
+import { AlertCircle, Loader2, Mail } from "lucide-vue-next";
 import { useToast } from "~/components/ui/toast/use-toast";
 import { useAuthStore } from "~/stores/auth";
 
 definePageMeta({
     layout: "auth",
-    middleware: "auth"
+    middleware: "auth",
 });
 
 const authStore = useAuthStore();
@@ -108,4 +117,4 @@ const handleSubmit = async (e: Event) => {
         loading.value = false;
     }
 };
-</script> 
+</script>

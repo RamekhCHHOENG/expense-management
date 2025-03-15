@@ -9,7 +9,7 @@ onMounted(() => {
     if (authStore.isAuthenticated) {
         navigateTo("/dashboard");
     } else {
-        navigateTo("/login");
+        navigateTo("/auth/login");
     }
 });
 </script>

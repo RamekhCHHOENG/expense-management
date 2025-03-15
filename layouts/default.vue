@@ -101,7 +101,7 @@ const handleLogout = async () => {
     try {
         loading.value = true;
         await authStore.signOut();
-        router.push("/login");
+        router.push("/auth/login");
     } catch (error: any) {
         console.error("Logout failed:", error);
     } finally {

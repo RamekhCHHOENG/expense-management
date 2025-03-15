@@ -163,7 +163,7 @@
         <div class="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <NuxtLink
-                to="/login"
+                to="/auth/login"
                 class="font-medium text-primary hover:text-primary/80 transition-colors"
             >
                 Sign in
