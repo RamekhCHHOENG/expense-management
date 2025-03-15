@@ -9,7 +9,7 @@
                             Manage your rental house expenses and payments
                         </CardDescription>
                     </div>
-                    <Button @click="openCreateDialog">
+                    <Button @click="handleAddExpense">
                         <PlusIcon class="mr-2 h-4 w-4" />
                         Create Expense
                     </Button>
@@ -29,50 +29,62 @@
                     :pagination="expensesPagination"
                     :loading="loading"
                     @option-change="handleOptionChange"
-                    @view="handleView"
-                    @edit="handleEdit"
-                    @delete="handleDelete"
+                    @view="handleViewExpense"
+                    @edit="handleEditExpense"
+                    @delete="handleDeleteExpense"
                 />
             </CardContent>
         </Card>
     </div>
 
-    <!-- Create/Edit Dialog -->
-    <Dialog
-        :open="isCreateDialogOpen"
-        @update:open="isCreateDialogOpen = $event"
-    >
-        <DialogContent class="sm:max-w-[600px]">
+    <!-- Add/Edit Dialog -->
+    <Dialog v-model:open="showExpenseForm">
+        <DialogContent>
             <DialogHeader>
-                <DialogTitle>Create Expense</DialogTitle>
-                <DialogDescription>
-                    Add a new expense record
-                </DialogDescription>
+                <DialogTitle>
+                    {{ selectedExpense ? "Edit" : "Add" }} Expense
+                </DialogTitle>
             </DialogHeader>
-            <div class="grid gap-4 py-4">
-                <ExpenseForm @submit="handleCreate" />
-            </div>
+            <ExpenseForm
+                :expense="selectedExpense || undefined"
+                @submit="handleSubmitExpense"
+            />
         </DialogContent>
     </Dialog>
 
-    <!-- View Dialog -->
+    <!-- View/Edit Dialog -->
     <ExpenseView
         v-if="selectedExpense"
+        v-model:open="showExpenseView"
         :expense="selectedExpense"
-        :is-open="isViewDialogOpen"
-        :is-edit-mode="isEditMode"
-        @update:is-open="isViewDialogOpen = $event"
-        @update="handleUpdate"
-        @cancel-edit="handleCancelEdit"
+        :is-edit="isEditMode"
+        @save="handleSaveExpense"
     />
 
-    <!-- Delete Dialog -->
-    <ExpenseDelete
-        v-if="expenseToDelete"
-        :expense="expenseToDelete"
-        v-model:is-open="isDeleteDialogOpen"
-        @delete="deleteExpense"
-    />
+    <!-- Delete Confirmation Dialog -->
+    <Dialog v-model:open="showDeleteConfirm">
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Delete Expense</DialogTitle>
+                <DialogDescription>
+                    Are you sure you want to delete this expense? This action
+                    cannot be undone.
+                </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+                <Button
+                    variant="destructive"
+                    :disabled="isDeleting"
+                    @click="confirmDelete"
+                >
+                    {{ isDeleting ? "Deleting..." : "Delete" }}
+                </Button>
+                <Button variant="outline" @click="showDeleteConfirm = false">
+                    Cancel
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>
 
 <script setup lang="ts">
@@ -94,10 +106,10 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import ExpenseDelete from "~/components/rental-expenses/expense-delete.vue";
 import ExpenseForm from "~/components/rental-expenses/expense-form.vue";
 import ExpenseList from "~/components/rental-expenses/expense-list.vue";
 import ExpenseView from "~/components/rental-expenses/expense-view.vue";
@@ -109,66 +121,82 @@ const {
     fetchExpenses,
     addExpense,
     updateExpense,
-    deleteExpense: removeExpense,
+    deleteExpense,
     seedInitialData,
 } = useExpenses();
 
+const showExpenseForm = ref(false);
+const showExpenseView = ref(false);
+const showDeleteConfirm = ref(false);
 const selectedExpense = ref<Expense | null>(null);
-const expenseToDelete = ref<Expense | null>(null);
-const isViewDialogOpen = ref(false);
-const isDeleteDialogOpen = ref(false);
 const isEditMode = ref(false);
-const isCreateDialogOpen = ref(false);
+const isDeleting = ref(false);
 
-const openCreateDialog = () => {
-    isCreateDialogOpen.value = true;
+const handleAddExpense = () => {
+    selectedExpense.value = null;
+    showExpenseForm.value = true;
 };
 
-const handleCreate = async (expense: Expense) => {
-    await addExpense(expense);
-    isCreateDialogOpen.value = false;
-    await fetchExpenses();
+const handleEditExpense = (expense: Expense) => {
+    selectedExpense.value = expense;
+    isEditMode.value = true;
+    showExpenseView.value = true;
+};
+
+const handleViewExpense = (expense: Expense) => {
+    selectedExpense.value = expense;
+    isEditMode.value = false;
+    showExpenseView.value = true;
+};
+
+const handleDeleteExpense = (expense: Expense) => {
+    selectedExpense.value = expense;
+    showDeleteConfirm.value = true;
+};
+
+const handleSubmitExpense = async (expense: Expense) => {
+    try {
+        if (selectedExpense.value) {
+            await updateExpense({ ...expense, id: selectedExpense.value.id });
+        } else {
+            await addExpense(expense);
+        }
+        showExpenseForm.value = false;
+        selectedExpense.value = null;
+    } catch (error) {
+        console.error("Error submitting expense:", error);
+    }
+};
+
+const handleSaveExpense = async (expense: Expense) => {
+    try {
+        await updateExpense(expense);
+        showExpenseView.value = false;
+        selectedExpense.value = null;
+        isEditMode.value = false;
+    } catch (error) {
+        console.error("Error saving expense:", error);
+    }
+};
+
+const confirmDelete = async () => {
+    if (!selectedExpense.value) return;
+
+    try {
+        isDeleting.value = true;
+        await deleteExpense(selectedExpense.value);
+        showDeleteConfirm.value = false;
+        selectedExpense.value = null;
+    } catch (error) {
+        console.error("Error deleting expense:", error);
+    } finally {
+        isDeleting.value = false;
+    }
 };
 
 const handleOptionChange = async (options: any) => {
     console.log("Fetching expenses with options:", options);
     await fetchExpenses(options);
-};
-
-const handleView = (expense: Expense) => {
-    selectedExpense.value = expense;
-    isEditMode.value = false;
-    isViewDialogOpen.value = true;
-};
-
-const handleEdit = (expense: Expense) => {
-    selectedExpense.value = expense;
-    isEditMode.value = true;
-    isViewDialogOpen.value = true;
-};
-
-const handleDelete = (expense: Expense) => {
-    expenseToDelete.value = expense;
-    isDeleteDialogOpen.value = true;
-};
-
-const handleUpdate = async (expense: Expense) => {
-    await updateExpense(expense);
-    selectedExpense.value = null;
-    isViewDialogOpen.value = false;
-    isEditMode.value = false;
-};
-
-const handleCancelEdit = () => {
-    isEditMode.value = false;
-    isViewDialogOpen.value = false;
-    selectedExpense.value = null;
-};
-
-const deleteExpense = async (expense: Expense) => {
-    await removeExpense(expense);
-    expenseToDelete.value = null;
-    isDeleteDialogOpen.value = false;
 };
 
 const expsenData = [

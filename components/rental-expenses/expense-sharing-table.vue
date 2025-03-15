@@ -2,14 +2,9 @@
     <div class="space-y-4">
         <div class="flex items-center justify-between">
             <h3 class="text-lg font-medium">Expense Sharing</h3>
-            <Button
-                v-if="!disabled"
-                @click="showAddUser = true"
-                variant="outline"
-                size="sm"
-            >
-                Add User
-            </Button>
+            <div class="text-sm text-muted-foreground">
+                Total Amount: {{ formatCurrency(totalAmount) }}
+            </div>
         </div>
 
         <!-- Users Table -->
@@ -46,53 +41,66 @@
                             </Button>
                         </TableCell>
                     </TableRow>
+                    <!-- Add User Row -->
+                    <TableRow v-if="!disabled && availableUsers.length > 0">
+                        <TableCell>
+                            <Select v-model="selectedUserId">
+                                <SelectTrigger class="w-[200px]">
+                                    <SelectValue placeholder="Add a user..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem
+                                            v-for="user in availableUsers"
+                                            :key="user.id"
+                                            :value="user.id"
+                                        >
+                                            {{ user.name }}
+                                        </SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                        </TableCell>
+                        <TableCell class="text-right">
+                            {{
+                                selectedUserId
+                                    ? formatCurrency(
+                                          calculateShareAmount(
+                                              modelValue?.length
+                                                  ? modelValue.length + 1
+                                                  : 1
+                                          )
+                                      )
+                                    : "-"
+                            }}
+                        </TableCell>
+                        <TableCell class="w-[50px]">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                @click="addSelectedUser"
+                                :disabled="!selectedUserId"
+                            >
+                                <PlusIcon class="h-4 w-4" />
+                            </Button>
+                        </TableCell>
+                    </TableRow>
                 </TableBody>
             </Table>
         </div>
-
-        <!-- Add User Dialog -->
-        <Dialog v-model:open="showAddUser">
-            <DialogContent class="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Add User</DialogTitle>
-                    <DialogDescription>
-                        Select a user to add to expense sharing
-                    </DialogDescription>
-                </DialogHeader>
-                <div class="grid gap-4 py-4">
-                    <Combobox
-                        v-model="selectedUser"
-                        :options="availableUsers"
-                        display-field="name"
-                        value-field="id"
-                        placeholder="Select a user..."
-                    />
-                </div>
-                <DialogFooter>
-                    <Button
-                        type="submit"
-                        @click="addUser"
-                        :disabled="!selectedUser"
-                    >
-                        Add User
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
     </div>
 </template>
 
 <script setup lang="ts">
 import { Button } from "@/components/ui/button";
-import { Combobox } from "@/components/ui/combobox";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import {
     Table,
     TableBody,
@@ -101,17 +109,18 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { XIcon } from "lucide-vue-next";
-import { computed, ref } from "vue";
+import { PlusIcon, XIcon } from "lucide-vue-next";
+import { computed, onMounted, ref, watch } from "vue";
 import type { User } from "~/stores/users";
 import { useUsersStore } from "~/stores/users";
-import type { ExpenseShare } from "~/types/expense";
+import type { Expense, ExpenseShare } from "~/types/expense";
 import { formatCurrency } from "~/utils/format";
 
 interface Props {
     modelValue?: ExpenseShare[];
     totalAmount: number;
     disabled?: boolean;
+    expense?: Expense;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -123,8 +132,7 @@ const emit = defineEmits<{
 }>();
 
 const usersStore = useUsersStore();
-const showAddUser = ref(false);
-const selectedUser = ref<string | null>(null);
+const selectedUserId = ref<string | null>(null);
 
 const availableUsers = computed(() => {
     const currentUserIds = new Set(
@@ -135,15 +143,13 @@ const availableUsers = computed(() => {
     );
 });
 
-const addUser = () => {
-    if (!selectedUser.value || !props.modelValue) return;
+const addSelectedUser = () => {
+    if (!selectedUserId.value) return;
 
-    const user = usersStore.users.find(
-        (u: User) => u.id === selectedUser.value
-    );
+    const user = usersStore.users.find((u) => u.id === selectedUserId.value);
     if (!user) return;
 
-    const newShares = [...props.modelValue];
+    const newShares = [...(props.modelValue || [])];
     newShares.push({
         userId: user.id,
         userName: user.name,
@@ -156,8 +162,7 @@ const addUser = () => {
     });
 
     emit("update:modelValue", newShares);
-    selectedUser.value = null;
-    showAddUser.value = false;
+    selectedUserId.value = null;
 };
 
 const removeUser = (userId: string) => {
@@ -178,4 +183,24 @@ const removeUser = (userId: string) => {
 const calculateShareAmount = (numberOfShares: number) => {
     return numberOfShares > 0 ? props.totalAmount / numberOfShares : 0;
 };
+
+// Watch for changes in totalAmount to recalculate shares
+watch(
+    () => props.totalAmount,
+    (newAmount) => {
+        if (!props.modelValue?.length) return;
+
+        const newShares = [...props.modelValue];
+        newShares.forEach((share) => {
+            share.amount = calculateShareAmount(newShares.length);
+        });
+
+        emit("update:modelValue", newShares);
+    },
+    { immediate: true }
+);
+
+onMounted(async () => {
+    await usersStore.fetchUsers();
+});
 </script>

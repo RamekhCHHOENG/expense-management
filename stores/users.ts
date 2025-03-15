@@ -22,13 +22,15 @@ export const useUsersStore = defineStore("users", {
             try {
                 const { db } = useFirebase();
                 const querySnapshot = await getDocs(collection(db, "users"));
-                this.users = querySnapshot.docs.map(
-                    (doc) =>
-                        ({
-                            id: doc.id,
-                            ...doc.data(),
-                        }) as User
-                );
+                this.users = querySnapshot.docs.map((doc) => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        name: data.displayName || data.name || "Unknown User",
+                        email: data.email || "",
+                    } as User;
+                });
+                console.log("Fetched users:", this.users);
             } catch (error) {
                 console.error("Error fetching users:", error);
                 this.error = "Failed to fetch users";
