@@ -55,7 +55,7 @@
 
     <!-- Add/Edit Dialog -->
     <Dialog v-model:open="showForm">
-        <DialogContent>
+        <DialogContent :class="DIALOG_SIZES.sm">
             <DialogHeader>
                 <DialogTitle>
                     {{ selectedType ? "Edit" : "Add" }} Expense Type
@@ -70,7 +70,7 @@
 
     <!-- Delete Confirmation Dialog -->
     <Dialog v-model:open="showDeleteConfirm">
-        <DialogContent>
+        <DialogContent :class="DIALOG_SIZES.sm">
             <DialogHeader>
                 <DialogTitle>Delete Expense Type</DialogTitle>
                 <DialogDescription>
@@ -121,6 +121,7 @@ import {
     TableRow,
 } from "~/components/ui/table";
 import { useAdditionalExpenseTypes } from "~/composables/useAdditionalExpenseTypes";
+import { DIALOG_SIZES } from "~/constants/dialog";
 import type { AdditionalExpenseType } from "~/types/additional-expense-type";
 
 const {

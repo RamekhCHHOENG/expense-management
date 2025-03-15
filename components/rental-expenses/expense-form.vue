@@ -163,7 +163,7 @@
         <div class="col-span-full">
             <FormField name="users" v-slot="{ value }">
                 <FormItem>
-                    <FormLabel>Expense Sharing</FormLabel>
+                    <!-- <FormLabel>Expense Sharing</FormLabel> -->
                     <FormControl>
                         <ExpenseSharingTable
                             :model-value="value || []"
@@ -174,7 +174,7 @@
                             "
                         />
                     </FormControl>
-                    <FormMessage />
+                    <!-- <FormMessage /> -->
                 </FormItem>
             </FormField>
         </div>

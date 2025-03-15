@@ -36,12 +36,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import ExpenseDelete from "~/components/rental-expenses/expense-delete.vue";
 import ExpenseList from "~/components/rental-expenses/expense-list.vue";
 import ExpenseView from "~/components/rental-expenses/expense-view.vue";
 import PageContainer from "~/components/ui/page-container.vue";
 import { useExpenses } from "~/composables/useExpenses";
+import { useOfflineDetection } from "~/composables/useOfflineDetection";
 import type { Expense } from "~/types/expense";
 
 // Component setup
@@ -55,6 +56,8 @@ const {
     deleteExpense,
 } = useExpenses();
 
+const { handleFirebaseError } = useOfflineDetection();
+
 // State management
 const selectedExpense = ref<Expense | undefined>();
 const showViewDialog = ref(false);
@@ -62,55 +65,69 @@ const showDeleteDialog = ref(false);
 const isEdit = ref(false);
 
 // Fetch expenses on mount
-fetchExpenses();
+onMounted(async () => {
+    try {
+        await fetchExpenses();
+    } catch (error) {
+        handleFirebaseError(error);
+    }
+});
 
 // Event handlers
 const handleSaveExpense = async (
     formData: Omit<Expense, "id" | "createdAt" | "updatedAt">
 ) => {
-    if (isEdit.value && selectedExpense.value) {
-        await updateExpense({
-            ...selectedExpense.value,
-            ...formData,
-            totalElect: formData.totalElect || null,
-            rtAcFridge: formData.rtAcFridge || null,
-            pheaFridge: formData.pheaFridge || null,
-            mining: formData.mining || null,
-            water: formData.water || null,
-            waste: formData.waste || null,
-            additional: formData.additional || null,
-            users: formData.users.map((user) => ({
-                ...user,
-                email: user.email || "",
-                electricityShare: user.electricityShare || 0,
-            })),
-        });
-    } else {
-        await addExpense({
-            ...formData,
-            totalElect: null,
-            rtAcFridge: null,
-            pheaFridge: null,
-            mining: null,
-            water: formData.water || null,
-            waste: formData.waste || null,
-            additional: formData.additional || null,
-            users: formData.users.map((user) => ({
-                ...user,
-                email: user.email || "",
-                electricityShare: user.electricityShare || 0,
-            })),
-        } as Expense);
+    try {
+        if (isEdit.value && selectedExpense.value) {
+            await updateExpense({
+                ...selectedExpense.value,
+                ...formData,
+                totalElect: formData.totalElect || null,
+                rtAcFridge: formData.rtAcFridge || null,
+                pheaFridge: formData.pheaFridge || null,
+                mining: formData.mining || null,
+                water: formData.water || null,
+                waste: formData.waste || null,
+                additional: formData.additional || null,
+                users: formData.users.map((user) => ({
+                    ...user,
+                    email: user.email || "",
+                    electricityShare: user.electricityShare || 0,
+                })),
+            });
+        } else {
+            await addExpense({
+                ...formData,
+                totalElect: null,
+                rtAcFridge: null,
+                pheaFridge: null,
+                mining: null,
+                water: formData.water || null,
+                waste: formData.waste || null,
+                additional: formData.additional || null,
+                users: formData.users.map((user) => ({
+                    ...user,
+                    email: user.email || "",
+                    electricityShare: user.electricityShare || 0,
+                })),
+            } as Expense);
+        }
+        showViewDialog.value = false;
+        selectedExpense.value = undefined;
+        isEdit.value = false;
+    } catch (error) {
+        handleFirebaseError(error);
     }
-    showViewDialog.value = false;
-    selectedExpense.value = undefined;
-    isEdit.value = false;
 };
 
 const handleDeleteExpense = async (expense: Expense) => {
-    await deleteExpense(expense);
-    showDeleteDialog.value = false;
-    selectedExpense.value = undefined;
+    try {
+        await deleteExpense(expense);
+        showDeleteDialog.value = false;
+        selectedExpense.value = undefined;
+    } catch (error) {
+        handleFirebaseError(error);
+    }
 };
 
 const handleViewExpense = (expense: Expense) => {
@@ -137,6 +154,10 @@ const handleAddClick = () => {
 };
 
 const handleOptionChange = async (options: any) => {
-    await fetchExpenses(options);
+    try {
+        await fetchExpenses(options);
+    } catch (error) {
+        handleFirebaseError(error);
+    }
 };
 </script>

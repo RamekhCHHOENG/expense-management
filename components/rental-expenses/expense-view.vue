@@ -1,6 +1,6 @@
 <template>
     <Dialog :open="open" @update:open="$emit('update:open', $event)">
-        <DialogContent class="sm:max-w-[600px]">
+        <DialogContent :class="DIALOG_SIZES.lg">
             <DialogHeader>
                 <DialogTitle
                     >{{ isEdit ? "Edit" : "View" }} Expense</DialogTitle
@@ -29,6 +29,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { DIALOG_SIZES } from "~/constants/dialog";
 import type { Expense } from "~/types/expense";
 import ExpenseForm from "./expense-form.vue";
 

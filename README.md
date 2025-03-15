@@ -1,55 +1,166 @@
-- alway use bun
-- alway scan all code in project to getter understanding
-- junk each file to smaller pease and put it in components
+# Expense Management System
 
-1. Features to Include
-   🔹 User Authentication – Login/signup with email or social auth.
-   🔹 Dashboard – A summary of total income, expenses, and savings.
-   🔹 Expense Categories – Food, Transport, Bills, Shopping, etc.
-   🔹 Transaction Management – Add, edit, delete expenses/income.
-   🔹 Charts & Analytics – Pie charts for category-wise spending, bar graphs for trends.
-   🔹 Monthly Budgeting – Set limits per category.
-   🔹 Recurring Expenses – Auto-add rent, subscriptions, etc.
-   🔹 Export Data – Download reports in CSV/PDF.
+A modern, feature-rich expense management application built with Nuxt 3 and Shadcn Vue, designed to help users track and manage their finances effectively.
 
-2. Tech Stack
-   ✅ Frontend: Nuxt 3 (Vue.js) + Shadcn Vue
-   ✅ State Management: Pinia
-   ✅ UI Components: Your own UI components
-   ✅ Backend: Supabase (PostgreSQL) or Firebase
-   ✅ Authentication: Supabase Auth or Firebase Auth
-   ✅ Charts: shadcn vue chart
-   ✅ Storage: LocalStorage for quick save, backend DB for persistence
+## 🚀 Features
 
-Firebase Config
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+- **User Authentication**
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-apiKey: "AIzaSyBcpxqsx5fhi5Iiis7LS0YJHQY1Q8ClJes",
-authDomain: "expense-management-b84bc.firebaseapp.com",
-projectId: "expense-management-b84bc",
-storageBucket: "expense-management-b84bc.firebasestorage.app",
-messagingSenderId: "721998265859",
-appId: "1:721998265859:web:cc220b9a328b40d952d836",
-measurementId: "G-NT7GQ1P5M6"
-};
+    - Email/password login and registration
+    - Social authentication options
+    - Secure session management
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+- **Dashboard**
 
-//Note
+    - Comprehensive financial overview
+    - Total income, expenses, and savings summary
+    - Quick actions for common tasks
 
-- remember to use shadcn vue and make ui elegent for modern beautiful and functionality
-- make all component reusable and store neccessary constant in constant folder.
-- use bun as always
-- always broken down each feature to small junk if it is component then put it in folder components/ just like feature user as example
+- **Expense Management**
 
-//Shadcnvue document
-https://www.shadcn-vue.com/
+    - Categorized expense tracking (Food, Transport, Bills, Shopping, etc.)
+    - Full CRUD operations for transactions
+    - Bulk operations support
+
+- **Smart Analytics**
+
+    - Interactive charts and graphs
+    - Category-wise spending analysis
+    - Monthly/yearly trends
+    - Custom date range reports
+
+- **Budget Planning**
+
+    - Category-wise budget limits
+    - Budget alerts and notifications
+    - Progress tracking
+
+- **Recurring Transactions**
+
+    - Automated recurring expense tracking
+    - Subscription management
+    - Payment reminders
+
+- **Data Export**
+    - CSV/PDF report generation
+    - Custom report templates
+    - Data backup options
+
+## 🛠️ Tech Stack
+
+- **Frontend Framework**
+
+    - [Nuxt 3](https://nuxt.com/) - Vue.js Framework
+    - [Shadcn Vue](https://www.shadcn-vue.com/) - UI Component Library
+
+- **State Management**
+
+    - [Pinia](https://pinia.vuejs.org/) - Vue Store
+
+- **Backend & Authentication**
+
+    - [Firebase](https://firebase.google.com/)
+        - Authentication
+        - Realtime Database
+        - Cloud Functions
+        - Analytics
+
+- **Development Tools**
+    - [Bun](https://bun.sh/) - JavaScript runtime & package manager
+    - [TypeScript](https://www.typescriptlang.org/) - Type safety
+    - [ESLint](https://eslint.org/) - Code linting
+    - [Prettier](https://prettier.io/) - Code formatting
+
+## 📦 Project Structure
+
+```
+expense-management/
+├── components/           # Reusable Vue components
+│   ├── ui/              # Shadcn Vue components
+│   ├── features/        # Feature-specific components
+│   └── shared/          # Shared components
+├── composables/         # Vue composables
+├── constants/           # Application constants
+├── layouts/             # Page layouts
+├── pages/              # Application pages
+├── stores/             # Pinia stores
+├── types/              # TypeScript types
+└── utils/              # Utility functions
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Bun >= 1.0.0
+- Node.js >= 18.x
+- Firebase account
+
+### Installation
+
+1. Clone the repository
+
+    ```bash
+    git clone https://github.com/yourusername/expense-management.git
+    cd expense-management
+    ```
+
+2. Install dependencies
+
+    ```bash
+    bun install
+    ```
+
+3. Set up environment variables
+
+    ```bash
+    cp .env.example .env
+    ```
+
+4. Configure Firebase
+
+    ```javascript
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyBcpxqsx5fhi5Iiis7LS0YJHQY1Q8ClJes",
+        authDomain: "expense-management-b84bc.firebaseapp.com",
+        projectId: "expense-management-b84bc",
+        storageBucket: "expense-management-b84bc.firebasestorage.app",
+        messagingSenderId: "721998265859",
+        appId: "1:721998265859:web:cc220b9a328b40d952d836",
+        measurementId: "G-NT7GQ1P5M6",
+    };
+    ```
+
+5. Start the development server
+    ```bash
+    bun dev
+    ```
+
+## 🔧 Development Guidelines
+
+- Use Shadcn Vue components for consistent UI/UX
+- Follow component-driven development
+- Store constants in the `constants` folder
+- Break down features into small, reusable components
+- Maintain proper TypeScript types
+- Follow the established folder structure
+
+## �� Documentation
+
+- [Shadcn Vue Documentation](https://www.shadcn-vue.com/)
+- [Nuxt 3 Documentation](https://nuxt.com/docs)
+- [Firebase Documentation](https://firebase.google.com/docs)
+- [Pinia Documentation](https://pinia.vuejs.org/)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

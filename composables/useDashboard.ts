@@ -7,10 +7,11 @@ import {
     where,
 } from "firebase/firestore";
 import { computed, ref } from "vue";
-import { db } from "~/plugins/firebase";
+import { useFirebase } from "~/composables/useFirebase";
 import type { Expense } from "~/types/expense";
 
 export function useDashboard() {
+    const { db } = useFirebase();
     const loading = ref(false);
     const expenses = ref<Expense[]>([]);
     const income = ref<number>(0);

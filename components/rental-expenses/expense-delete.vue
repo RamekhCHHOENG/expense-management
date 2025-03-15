@@ -1,6 +1,6 @@
 <template>
     <Dialog :open="isOpen" @update:open="$emit('update:is-open', $event)">
-        <DialogContent>
+        <DialogContent :class="DIALOG_SIZES.sm">
             <DialogHeader>
                 <DialogTitle>Delete Expense</DialogTitle>
                 <DialogDescription>
@@ -61,6 +61,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { ref } from "vue";
+import { DIALOG_SIZES } from "~/constants/dialog";
 
 interface Expense {
     id?: string;

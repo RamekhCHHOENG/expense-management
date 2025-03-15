@@ -154,7 +154,7 @@ const totalItems = computed(() => filteredUsers.value.length);
 <template>
     <div class="space-y-4">
         <!-- Search and Filter -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 pt-6">
             <div class="relative flex-1">
                 <Search
                     class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground"

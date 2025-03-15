@@ -1,7 +1,7 @@
 <template>
     <div class="container mx-auto p-4">
         <!-- Header Card -->
-        <Card class="my-8">
+        <Card class="mb-6">
             <CardHeader>
                 <div class="flex items-center justify-between">
                     <div>
