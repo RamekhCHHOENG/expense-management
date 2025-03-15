@@ -12,30 +12,34 @@
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead class="text-right">Share Amount</TableHead>
-                        <TableHead>Additional Expense Type</TableHead>
-                        <TableHead class="text-right"
+                        <TableHead class="py-4">User</TableHead>
+                        <TableHead class="text-right py-4"
+                            >Share Amount</TableHead
+                        >
+                        <TableHead class="py-4"
+                            >Additional Expense Type</TableHead
+                        >
+                        <TableHead class="text-right py-4"
                             >Additional Amount</TableHead
                         >
-                        <TableHead v-if="!disabled"></TableHead>
+                        <TableHead v-if="!disabled" class="py-4"></TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableRow v-if="!modelValue?.length">
                         <TableCell
                             colspan="5"
-                            class="text-center text-muted-foreground"
+                            class="text-center text-muted-foreground py-4"
                         >
                             No users added yet
                         </TableCell>
                     </TableRow>
                     <TableRow v-for="user in modelValue" :key="user.id">
-                        <TableCell>{{ user.name }}</TableCell>
-                        <TableCell class="text-right">{{
+                        <TableCell class="py-4">{{ user.name }}</TableCell>
+                        <TableCell class="text-right py-4">{{
                             formatCurrency(user.amount)
                         }}</TableCell>
-                        <TableCell>
+                        <TableCell class="py-4">
                             <Select
                                 v-model="user.additionalExpenseType"
                                 :disabled="disabled"
@@ -56,7 +60,7 @@
                                 </SelectContent>
                             </Select>
                         </TableCell>
-                        <TableCell>
+                        <TableCell class="py-4">
                             <NumberField
                                 v-if="user.additionalExpenseType"
                                 :model-value="user.additionalAmount"
@@ -76,7 +80,7 @@
                                 </NumberFieldContent>
                             </NumberField>
                         </TableCell>
-                        <TableCell v-if="!disabled" class="w-[50px]">
+                        <TableCell v-if="!disabled" class="w-[50px] py-4">
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -88,7 +92,7 @@
                     </TableRow>
                     <!-- Add User Row -->
                     <TableRow v-if="!disabled && availableUsers.length > 0">
-                        <TableCell>
+                        <TableCell class="py-4">
                             <Select v-model="selectedUserId">
                                 <SelectTrigger class="w-[200px]">
                                     <SelectValue placeholder="Add a user..." />
@@ -109,7 +113,7 @@
                                 </SelectContent>
                             </Select>
                         </TableCell>
-                        <TableCell class="text-right">
+                        <TableCell class="text-right py-4">
                             {{
                                 selectedUserId
                                     ? formatCurrency(
@@ -122,9 +126,9 @@
                                     : "-"
                             }}
                         </TableCell>
-                        <TableCell></TableCell>
-                        <TableCell></TableCell>
-                        <TableCell class="w-[50px]">
+                        <TableCell class="py-4"></TableCell>
+                        <TableCell class="py-4"></TableCell>
+                        <TableCell class="w-[50px] py-4">
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -171,14 +175,7 @@ import {
 import { useAdditionalExpenseTypes } from "~/composables/useAdditionalExpenseTypes";
 import type { UserProfile } from "~/services/user";
 import { useUserService } from "~/services/user";
-
-interface ExpenseUser {
-    id: string;
-    name: string;
-    amount: number;
-    additionalExpenseType?: string;
-    additionalAmount?: number;
-}
+import type { ExpenseUser } from "~/types/expense";
 
 const props = defineProps<{
     modelValue: ExpenseUser[];
@@ -200,9 +197,11 @@ const recalculateAllShares = () => {
     if (!props.modelValue?.length) return;
 
     const numUsers = props.modelValue.length;
+    const baseShare = calculateShareAmount(numUsers);
     const newUsers = props.modelValue.map((user) => ({
         ...user,
-        amount: calculateShareAmount(numUsers),
+        amount: baseShare,
+        electricityShare: baseShare * 0.2, // Default to 20% of base share for electricity
     }));
 
     emit("update:model-value", newUsers);
@@ -259,17 +258,21 @@ const addSelectedUser = () => {
 
     const newUsers = [...(props.modelValue || [])];
     const numUsers = newUsers.length + 1;
+    const baseShare = calculateShareAmount(numUsers);
 
     // Recalculate shares for all users
     newUsers.forEach((u) => {
-        u.amount = calculateShareAmount(numUsers);
+        u.amount = baseShare;
+        u.electricityShare = baseShare * 0.2;
     });
 
     // Add new user
     newUsers.push({
         id: user.uid,
         name: user.displayName || user.username,
-        amount: calculateShareAmount(numUsers),
+        email: user.email || "",
+        amount: baseShare,
+        electricityShare: baseShare * 0.2,
     });
 
     emit("update:model-value", newUsers);
@@ -279,10 +282,12 @@ const addSelectedUser = () => {
 const removeUser = (userId: string) => {
     const newUsers = props.modelValue.filter((u) => u.id !== userId);
     const numUsers = newUsers.length;
+    const baseShare = calculateShareAmount(numUsers);
 
     // Recalculate shares for remaining users
     newUsers.forEach((u) => {
-        u.amount = calculateShareAmount(numUsers);
+        u.amount = baseShare;
+        u.electricityShare = baseShare * 0.2;
     });
 
     emit("update:model-value", newUsers);

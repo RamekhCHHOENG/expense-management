@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { UserPlus } from "lucide-vue-next";
 import { onMounted, ref } from "vue";
-import { Button } from "~/components/ui/button";
 import { Dialog } from "~/components/ui/dialog";
+import PageContainer from "~/components/ui/page-container.vue";
 import { useToast } from "~/components/ui/toast/use-toast";
 import UserDelete from "~/components/users/user-delete.vue";
 import UserForm from "~/components/users/user-form.vue";
@@ -21,8 +20,8 @@ const users = ref<UserProfile[]>([]);
 const showCreateDialog = ref(false);
 const showViewDialog = ref(false);
 const showDeleteDialog = ref(false);
-const editingUser = ref<UserProfile | null>(null);
-const selectedUser = ref<UserProfile | null>(null);
+const editingUser = ref<UserProfile | undefined>();
+const selectedUser = ref<UserProfile | undefined>();
 const itemsPerPage = ref(10);
 const currentPage = ref(1);
 
@@ -89,7 +88,7 @@ const handleSubmit = async (form: any) => {
         }
         // Reset form and close dialog
         showCreateDialog.value = false;
-        editingUser.value = null;
+        editingUser.value = undefined;
         await fetchUsers();
     } catch (error: any) {
         toast({
@@ -123,7 +122,7 @@ const handleDelete = async () => {
             description: "User deleted successfully",
         });
         showDeleteDialog.value = false;
-        selectedUser.value = null;
+        selectedUser.value = undefined;
         await fetchUsers();
     } catch (error: any) {
         toast({
@@ -142,20 +141,13 @@ const handlePageChange = (page: number) => {
 </script>
 
 <template>
-    <div class="container py-6 space-y-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-3xl font-bold tracking-tight">Users</h2>
-                <p class="text-muted-foreground">
-                    Manage your application users here.
-                </p>
-            </div>
-            <Button @click="showCreateDialog = true">
-                <UserPlus class="w-4 h-4 mr-2" />
-                Add User
-            </Button>
-        </div>
-
+    <PageContainer
+        title="Users"
+        description="Manage your application users here"
+        :show-add-button="true"
+        add-button-text="Add User"
+        @add="showCreateDialog = true"
+    >
         <UserList
             :users="users"
             :loading="loading"
@@ -210,5 +202,5 @@ const handlePageChange = (page: number) => {
                 @cancel="showDeleteDialog = false"
             />
         </Dialog>
-    </div>
+    </PageContainer>
 </template>

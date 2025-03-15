@@ -4,6 +4,8 @@ export interface ExpenseUser {
     email: string;
     amount: number;
     electricityShare: number;
+    additionalExpenseType?: string;
+    additionalAmount?: number;
 }
 
 export interface Expense {
@@ -11,6 +13,10 @@ export interface Expense {
     date: string;
     house: number;
     electricity: number;
+    totalElect?: number | null;
+    rtAcFridge?: number | null;
+    pheaFridge?: number | null;
+    mining?: number | null;
     water: number | null;
     waste: number | null;
     additional: number | null;
@@ -23,6 +29,10 @@ export interface FirestoreExpense {
     date: string;
     house: string;
     electricity: string;
+    totalElect?: string;
+    rtAcFridge?: string;
+    pheaFridge?: string;
+    mining?: string;
     water: string;
     waste: string;
     additional: string;

@@ -1,75 +1,57 @@
 <template>
-    <div class="container mx-auto p-4">
-        <Card class="mb-8">
-            <CardHeader>
-                <div class="flex items-center justify-between">
-                    <div>
-                        <CardTitle>Additional Expense Types</CardTitle>
-                        <CardDescription>
-                            Manage additional expense types for rental expenses
-                        </CardDescription>
-                    </div>
-                    <Button @click="handleAddType">
-                        <PlusIcon class="mr-2 h-4 w-4" />
-                        Add Type
-                    </Button>
-                </div>
-            </CardHeader>
-        </Card>
-
-        <Card>
-            <CardContent>
-                <div class="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead class="w-[150px]">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow v-if="loading">
-                                <TableCell colspan="3" class="text-center py-4">
-                                    Loading...
-                                </TableCell>
-                            </TableRow>
-                            <TableRow v-else-if="!expenseTypes.length">
-                                <TableCell colspan="3" class="text-center py-4">
-                                    No expense types found
-                                </TableCell>
-                            </TableRow>
-                            <TableRow
-                                v-for="type in expenseTypes"
-                                :key="type.id"
-                            >
-                                <TableCell>{{ type.name }}</TableCell>
-                                <TableCell>{{ type.description }}</TableCell>
-                                <TableCell>
-                                    <div class="flex items-center gap-2">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            @click="handleEditType(type)"
-                                        >
-                                            <PencilIcon class="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            @click="handleDeleteType(type)"
-                                        >
-                                            <TrashIcon class="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
-            </CardContent>
-        </Card>
-    </div>
+    <PageContainer
+        title="Additional Expense Types"
+        description="Manage additional expense types for rental expenses"
+        :show-add-button="true"
+        add-button-text="Add Type"
+        @add="handleAddType"
+    >
+        <div class="rounded-md border">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead class="w-[150px]">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow v-if="loading">
+                        <TableCell colspan="3" class="text-center py-4">
+                            Loading...
+                        </TableCell>
+                    </TableRow>
+                    <TableRow v-else-if="!expenseTypes.length">
+                        <TableCell colspan="3" class="text-center py-4">
+                            No expense types found
+                        </TableCell>
+                    </TableRow>
+                    <TableRow v-for="type in expenseTypes" :key="type.id">
+                        <TableCell>{{ type.name }}</TableCell>
+                        <TableCell>{{ type.description }}</TableCell>
+                        <TableCell>
+                            <div class="flex items-center gap-2">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    @click="handleEditType(type)"
+                                >
+                                    <PencilIcon class="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    @click="handleDeleteType(type)"
+                                >
+                                    <TrashIcon class="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+        </div>
+    </PageContainer>
 
     <!-- Add/Edit Dialog -->
     <Dialog v-model:open="showForm">
@@ -117,17 +99,10 @@
 </template>
 
 <script setup lang="ts">
-import { PencilIcon, PlusIcon, TrashIcon } from "lucide-vue-next";
+import { PencilIcon, TrashIcon } from "lucide-vue-next";
 import { onMounted, ref } from "vue";
 import ExpenseTypeForm from "~/components/additional-expense-types/expense-type-form.vue";
 import { Button } from "~/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "~/components/ui/card";
 import {
     Dialog,
     DialogContent,
@@ -136,6 +111,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "~/components/ui/dialog";
+import PageContainer from "~/components/ui/page-container.vue";
 import {
     Table,
     TableBody,
@@ -159,11 +135,11 @@ const {
 
 const showForm = ref(false);
 const showDeleteConfirm = ref(false);
-const selectedType = ref<AdditionalExpenseType | null>(null);
+const selectedType = ref<AdditionalExpenseType | undefined>();
 const isDeleting = ref(false);
 
 const handleAddType = () => {
-    selectedType.value = null;
+    selectedType.value = undefined;
     showForm.value = true;
 };
 
@@ -190,7 +166,7 @@ const handleSubmitType = async (
             await addExpenseType(type as AdditionalExpenseType);
         }
         showForm.value = false;
-        selectedType.value = null;
+        selectedType.value = undefined;
     } catch (error) {
         console.error("Error submitting expense type:", error);
     }
@@ -203,7 +179,7 @@ const confirmDelete = async () => {
         isDeleting.value = true;
         await deleteExpenseType(selectedType.value);
         showDeleteConfirm.value = false;
-        selectedType.value = null;
+        selectedType.value = undefined;
     } catch (error) {
         console.error("Error deleting expense type:", error);
     } finally {

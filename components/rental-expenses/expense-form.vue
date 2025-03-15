@@ -207,23 +207,17 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed, onMounted, ref } from "vue";
 import * as z from "zod";
+import type { ExpenseUser } from "~/types/expense";
 import ExpenseSharingTable from "./expense-sharing-table.vue";
-
-interface ExpenseUser {
-    id: string;
-    name: string;
-    amount: number;
-    additionalExpenseType?: string;
-    additionalAmount?: number;
-}
 
 interface Props {
     expense?: {
         date: string;
         house: number;
-        water: number;
-        waste: number;
-        additional: number;
+        electricity: number;
+        water: number | null;
+        waste: number | null;
+        additional: number | null;
         users: ExpenseUser[];
     };
     disabled?: boolean;
@@ -241,15 +235,20 @@ const formSchema = toTypedSchema(
     z.object({
         date: z.string().min(1, "Date is required"),
         house: z.number().min(0.01, "House rent must be greater than 0"),
-        water: z.number().optional().default(0),
-        waste: z.number().optional().default(0),
-        additional: z.number().optional().default(0),
+        electricity: z
+            .number()
+            .min(0, "Electricity must be greater than or equal to 0"),
+        water: z.number().nullable().default(null),
+        waste: z.number().nullable().default(null),
+        additional: z.number().nullable().default(null),
         users: z
             .array(
                 z.object({
                     id: z.string(),
                     name: z.string(),
+                    email: z.string(),
                     amount: z.number(),
+                    electricityShare: z.number(),
                     additionalExpenseType: z.string().optional(),
                     additionalAmount: z.number().optional(),
                 })
@@ -263,9 +262,10 @@ const { handleSubmit, setFieldValue, values } = useForm({
     initialValues: {
         date: new Date().toISOString().split("T")[0],
         house: 0,
-        water: 0,
-        waste: 0,
-        additional: 0,
+        electricity: 0,
+        water: null,
+        waste: null,
+        additional: null,
         users: [],
     },
 });
@@ -274,6 +274,7 @@ const { handleSubmit, setFieldValue, values } = useForm({
 const totalAmount = computed(() => {
     return (
         (values.house || 0) +
+        (values.electricity || 0) +
         (values.water || 0) +
         (values.waste || 0) +
         (values.additional || 0)
@@ -289,13 +290,16 @@ const onSubmit = handleSubmit(async (formValues) => {
         const expense = {
             date: formValues.date,
             house: formValues.house || 0,
-            water: formValues.water || 0,
-            waste: formValues.waste || 0,
-            additional: formValues.additional || 0,
+            electricity: formValues.electricity || 0,
+            water: formValues.water,
+            waste: formValues.waste,
+            additional: formValues.additional,
             users: formValues.users.map((user) => ({
                 id: user.id,
                 name: user.name,
+                email: user.email,
                 amount: user.amount || 0,
+                electricityShare: user.electricityShare || 0,
                 additionalExpenseType: user.additionalExpenseType,
                 additionalAmount: user.additionalAmount,
             })),
@@ -312,9 +316,10 @@ const initializeForm = () => {
     if (props.expense) {
         setFieldValue("date", props.expense.date);
         setFieldValue("house", props.expense.house);
-        setFieldValue("water", props.expense.water || 0);
-        setFieldValue("waste", props.expense.waste || 0);
-        setFieldValue("additional", props.expense.additional || 0);
+        setFieldValue("electricity", props.expense.electricity);
+        setFieldValue("water", props.expense.water);
+        setFieldValue("waste", props.expense.waste);
+        setFieldValue("additional", props.expense.additional);
         setFieldValue("users", props.expense.users || []);
     }
 };

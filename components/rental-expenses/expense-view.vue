@@ -33,7 +33,7 @@ import type { Expense } from "~/types/expense";
 import ExpenseForm from "./expense-form.vue";
 
 interface Props {
-    expense: Expense;
+    expense?: Expense;
     open: boolean;
     isEdit?: boolean;
 }
@@ -44,14 +44,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
     (e: "update:open", value: boolean): void;
-    (e: "save", expense: Expense): void;
+    (e: "save", expense: Omit<Expense, "id" | "createdAt" | "updatedAt">): void;
 }>();
 
-const handleSubmit = (updatedExpense: Expense) => {
-    emit("save", {
-        ...updatedExpense,
-        id: props.expense.id,
-    });
+const handleSubmit = (
+    updatedExpense: Omit<Expense, "id" | "createdAt" | "updatedAt">
+) => {
+    emit("save", updatedExpense);
     emit("update:open", false);
 };
 </script>
