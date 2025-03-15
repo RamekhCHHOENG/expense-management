@@ -13,8 +13,18 @@ export default defineNuxtPlugin((nuxtApp) => {
                     }
                     break;
                 default:
-                    console.error("Firebase error:", error);
+                    // Check for offline error message
+                    if (error.message?.includes("client is offline")) {
+                        navigateTo("/offline");
+                    } else {
+                        console.error("Firebase error:", error);
+                    }
             }
+        } else if (
+            error instanceof Error &&
+            error.message?.includes("client is offline")
+        ) {
+            navigateTo("/offline");
         } else {
             console.error("Application error:", error);
             console.error("Vue component:", instance);

@@ -1,24 +1,21 @@
-import type { Auth } from "firebase/auth";
-import type { Firestore } from "firebase/firestore";
 import { inject } from "vue";
 import { useAuthStore } from "~/stores/auth";
-import { AuthKey, FirestoreKey } from "./firebase.client";
+import { AuthKey, FirebaseReadyKey, FirestoreKey } from "./firebase.client";
 
 export default defineNuxtPlugin({
     name: "auth",
     enforce: "post",
     async setup(nuxtApp) {
         try {
-            // Try Vue's inject first
-            let auth = inject(AuthKey) as Auth | undefined;
-            let db = inject(FirestoreKey) as Firestore | undefined;
-
-            // If Vue's inject fails, try Nuxt's plugin system
-            if (!auth || !db) {
-                const { $firebaseAuth, $firebaseDb } = nuxtApp;
-                auth = $firebaseAuth as Auth;
-                db = $firebaseDb as Firestore;
+            // Wait for Firebase to be ready
+            const isFirebaseReady = inject(FirebaseReadyKey);
+            if (!isFirebaseReady) {
+                throw new Error("Firebase is not ready");
             }
+
+            // Get Firebase services
+            const auth = inject(AuthKey);
+            const db = inject(FirestoreKey);
 
             // Ensure services are available
             if (!auth || !db) {

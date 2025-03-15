@@ -29,8 +29,18 @@ export function useOfflineDetection() {
                     }
                     break;
                 default:
-                    console.error("Firebase error:", error);
+                    // Check for offline error message
+                    if (error.message?.includes("client is offline")) {
+                        handleOffline();
+                    } else {
+                        console.error("Firebase error:", error);
+                    }
             }
+        } else if (
+            error instanceof Error &&
+            error.message?.includes("client is offline")
+        ) {
+            handleOffline();
         }
     };
 
