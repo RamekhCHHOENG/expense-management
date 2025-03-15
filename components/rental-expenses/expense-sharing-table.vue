@@ -46,9 +46,9 @@
                                 <SelectContent>
                                     <SelectGroup>
                                         <SelectItem
-                                            v-for="type in additionalExpenseTypes"
-                                            :key="type.uuid"
-                                            :value="type.uuid"
+                                            v-for="type in expenseTypes"
+                                            :key="type.id"
+                                            :value="type.id || ''"
                                         >
                                             {{ type.name }}
                                         </SelectItem>
@@ -168,6 +168,7 @@ import {
     TableHeader,
     TableRow,
 } from "~/components/ui/table";
+import { useAdditionalExpenseTypes } from "~/composables/useAdditionalExpenseTypes";
 import type { UserProfile } from "~/services/user";
 import { useUserService } from "~/services/user";
 
@@ -178,17 +179,6 @@ interface ExpenseUser {
     additionalExpenseType?: string;
     additionalAmount?: number;
 }
-
-interface AdditionalExpenseType {
-    uuid: string;
-    name: string;
-}
-
-const additionalExpenseTypes = [
-    { uuid: "fridge", name: "Fridge" },
-    { uuid: "mining", name: "Mining" },
-    { uuid: "ac", name: "Air Conditioning" },
-];
 
 const props = defineProps<{
     modelValue: ExpenseUser[];
@@ -203,6 +193,8 @@ const emit = defineEmits<{
 const userService = useUserService();
 const users = ref<UserProfile[]>([]);
 const selectedUserId = ref("");
+
+const { expenseTypes, fetchExpenseTypes } = useAdditionalExpenseTypes();
 
 const recalculateAllShares = () => {
     if (!props.modelValue?.length) return;
@@ -222,10 +214,13 @@ watch(() => props.totalAmount, recalculateAllShares);
 // Fetch all users and initialize shares
 onMounted(async () => {
     try {
-        users.value = await userService.getAllUsers();
+        await Promise.all([
+            userService.getAllUsers().then((u) => (users.value = u)),
+            fetchExpenseTypes(),
+        ]);
         recalculateAllShares();
     } catch (error) {
-        console.error("Failed to fetch users:", error);
+        console.error("Failed to initialize:", error);
     }
 });
 

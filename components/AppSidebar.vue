@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { SidebarProps } from "@/components/ui/sidebar";
 import NavProjects from "@/components/NavProjects.vue";
 import NavUser from "@/components/NavUser.vue";
 import TeamSwitcher from "@/components/TeamSwitcher.vue";
+import type { SidebarProps } from "@/components/ui/sidebar";
 import {
     Sidebar,
     SidebarContent,
@@ -61,6 +61,11 @@ const data = {
         {
             name: "Rental House Expense",
             url: "rental-expenses",
+            icon: PieChart,
+        },
+        {
+            name: "Additional Expense Types",
+            url: "additional-expense-types",
             icon: PieChart,
         },
         {
