@@ -163,7 +163,7 @@
         <div class="col-span-full">
             <FormField name="users" v-slot="{ value }">
                 <FormItem>
-                    <!-- <FormLabel>Expense Sharing</FormLabel> -->
+                    <FormLabel>Expense Sharing</FormLabel>
                     <FormControl>
                         <ExpenseSharingTable
                             :model-value="value || []"
@@ -174,7 +174,7 @@
                             "
                         />
                     </FormControl>
-                    <!-- <FormMessage /> -->
+                    <FormMessage />
                 </FormItem>
             </FormField>
         </div>
@@ -249,8 +249,9 @@ const formSchema = toTypedSchema(
                     email: z.string(),
                     amount: z.number(),
                     electricityShare: z.number(),
-                    additionalExpenseType: z.string().optional(),
-                    additionalAmount: z.number().optional(),
+                    additionalExpenseType: z.string().nullable(),
+                    additionalAmount: z.number().nullable(),
+                    room: z.string(),
                 })
             )
             .default([]),
@@ -286,6 +287,15 @@ const isSubmitting = ref(false);
 const onSubmit = handleSubmit(async (formValues) => {
     isSubmitting.value = true;
     try {
+        // Validate additional amount when expense type is selected
+        const hasInvalidAdditionalAmount = formValues.users.some(
+            (user) => user.additionalExpenseType && !user.additionalAmount
+        );
+
+        if (hasInvalidAdditionalAmount) {
+            return;
+        }
+
         // Ensure all numeric values are initialized
         const expense = {
             date: formValues.date,
@@ -297,11 +307,12 @@ const onSubmit = handleSubmit(async (formValues) => {
             users: formValues.users.map((user) => ({
                 id: user.id,
                 name: user.name,
-                email: user.email,
+                email: user.email || "",
                 amount: user.amount || 0,
                 electricityShare: user.electricityShare || 0,
                 additionalExpenseType: user.additionalExpenseType,
                 additionalAmount: user.additionalAmount,
+                room: user.room,
             })),
         };
 

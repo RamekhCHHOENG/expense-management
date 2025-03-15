@@ -34,7 +34,7 @@ const formatDate = (date: any) => {
 </script>
 
 <template>
-    <DialogContent class="sm:max-w-[500px]">
+    <DialogContent class="!max-w-lg">
         <DialogHeader>
             <DialogTitle>User Details</DialogTitle>
         </DialogHeader>

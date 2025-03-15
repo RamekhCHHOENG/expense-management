@@ -5,7 +5,7 @@
                 <FormLabel>Name</FormLabel>
                 <FormControl>
                     <Input
-                        :model-value="value"
+                        :model-value="String(value || '')"
                         @update:model-value="(v) => setFieldValue('name', v)"
                         placeholder="Enter expense type name"
                         :disabled="disabled"
@@ -20,7 +20,7 @@
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                     <Textarea
-                        :model-value="value"
+                        :model-value="String(value || '')"
                         @update:model-value="
                             (v) => setFieldValue('description', v)
                         "
@@ -43,20 +43,20 @@
 </template>
 
 <script setup lang="ts">
-import { Button } from "@/components/ui/button";
+import { toTypedSchema } from "@vee-validate/zod";
+import { useForm } from "vee-validate";
+import { ref } from "vue";
+import * as z from "zod";
+import { Button } from "~/components/ui/button";
 import {
     FormControl,
     FormField,
     FormItem,
     FormLabel,
     FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toTypedSchema } from "@vee-validate/zod";
-import { useForm } from "vee-validate";
-import { ref } from "vue";
-import * as z from "zod";
+} from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 import type { AdditionalExpenseType } from "~/types/additional-expense-type";
 
 interface Props {

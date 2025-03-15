@@ -37,7 +37,7 @@ const formatDate = (date: any) => {
 </script>
 
 <template>
-    <DialogContent class="sm:max-w-[500px]">
+    <DialogContent class="!max-w-sm">
         <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
@@ -92,13 +92,21 @@ const formatDate = (date: any) => {
         </div>
 
         <DialogFooter>
-            <Button variant="outline" @click="emit('cancel')">Cancel</Button>
             <Button
-                variant="destructive"
-                @click="emit('confirm')"
+                type="button"
+                variant="outline"
                 :disabled="loading"
+                @click="emit('cancel')"
             >
-                Delete User
+                Cancel
+            </Button>
+            <Button
+                type="button"
+                variant="destructive"
+                :loading="loading"
+                @click="emit('confirm')"
+            >
+                Delete
             </Button>
         </DialogFooter>
     </DialogContent>

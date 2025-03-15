@@ -17,7 +17,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "~/components/ui/select";
-import { DIALOG_SIZES } from "~/constants/dialog";
 import type { UserProfile } from "~/services/user";
 
 interface UserForm {
@@ -121,7 +120,7 @@ const handleSubmit = () => {
 </script>
 
 <template>
-    <DialogContent :class="DIALOG_SIZES.md">
+    <DialogContent class="!max-w-lg">
         <DialogHeader>
             <DialogTitle>{{
                 editingUser ? "Edit User" : "Add User"

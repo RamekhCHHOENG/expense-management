@@ -41,8 +41,12 @@
                         }}</TableCell>
                         <TableCell class="py-4">
                             <Select
-                                v-model="user.additionalExpenseType"
+                                :model-value="user.additionalExpenseType"
                                 :disabled="disabled"
+                                clearable
+                                @update:model-value="
+                                    (v) => handleExpenseTypeChange(v, user.id)
+                                "
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select type..." />
@@ -237,12 +241,43 @@ const calculateShareAmount = (numUsers: number) => {
     return props.totalAmount / numUsers;
 };
 
-const updateAdditionalAmount = (userId: string, amount: number) => {
+const removeUndefinedFields = (user: ExpenseUser): ExpenseUser => {
+    const cleanUser = { ...user };
+    // Convert undefined to null for Firebase
+    cleanUser.additionalExpenseType = cleanUser.additionalExpenseType ?? null;
+    cleanUser.additionalAmount = cleanUser.additionalAmount ?? null;
+    return cleanUser;
+};
+
+const validateUsers = () => {
+    return true; // Always valid - delegate validation to parent form
+};
+
+const updateAdditionalAmount = (userId: string, amount: number | undefined) => {
     const newUsers = props.modelValue.map((user) => {
         if (user.id === userId) {
             return {
                 ...user,
-                additionalAmount: amount,
+                additionalAmount: amount === undefined ? null : amount,
+            };
+        }
+        return user;
+    });
+    emit("update:model-value", newUsers);
+};
+
+const handleExpenseTypeChange = (value: any, userId: string) => {
+    // Convert empty string to null to match ExpenseUser type
+    const typeValue = value === "" ? null : value;
+
+    const newUsers = props.modelValue.map((user) => {
+        if (user.id === userId) {
+            return {
+                ...user,
+                additionalExpenseType: typeValue,
+                // Only reset amount when clearing the type
+                additionalAmount:
+                    typeValue === null ? null : user.additionalAmount,
             };
         }
         return user;
@@ -256,23 +291,26 @@ const addSelectedUser = () => {
     const user = users.value.find((u) => u.uid === selectedUserId.value);
     if (!user) return;
 
-    const newUsers = [...(props.modelValue || [])];
+    const newUsers = props.modelValue ? [...props.modelValue] : [];
     const numUsers = newUsers.length + 1;
     const baseShare = calculateShareAmount(numUsers);
 
-    // Recalculate shares for all users
+    // Update existing users' shares
     newUsers.forEach((u) => {
         u.amount = baseShare;
         u.electricityShare = baseShare * 0.2;
     });
 
-    // Add new user
+    // Add new user with no validation or additional expense
     newUsers.push({
         id: user.uid,
-        name: user.displayName || user.username,
+        name: user.displayName || user.username || "",
         email: user.email || "",
         amount: baseShare,
         electricityShare: baseShare * 0.2,
+        room: "",
+        additionalExpenseType: null,
+        additionalAmount: null,
     });
 
     emit("update:model-value", newUsers);
@@ -301,4 +339,9 @@ const formatCurrency = (amount: number) => {
         maximumFractionDigits: 2,
     }).format(amount);
 };
+
+// Expose validation function for parent component
+defineExpose({
+    validateUsers,
+});
 </script>

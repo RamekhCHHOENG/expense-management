@@ -6,8 +6,8 @@ export interface ExpenseUser {
     email: string;
     amount: number;
     electricityShare: number;
-    additionalExpenseType?: string;
-    additionalAmount?: number;
+    additionalExpenseType: string | null;
+    additionalAmount: number | null;
     room: string;
 }
 
