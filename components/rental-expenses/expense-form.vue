@@ -31,54 +31,6 @@
                 }}</span>
             </div>
 
-            <!-- Total Electricity -->
-            <div class="form-group">
-                <Label for="totalElect">Total Electricity</Label>
-                <Input
-                    id="totalElect"
-                    v-model="formData.totalElect"
-                    type="number"
-                    step="0.01"
-                    :disabled="disabled"
-                />
-            </div>
-
-            <!-- RT AC & Fridge -->
-            <div class="form-group">
-                <Label for="rtAcFridge">RT AC & Fridge</Label>
-                <Input
-                    id="rtAcFridge"
-                    v-model="formData.rtAcFridge"
-                    type="number"
-                    step="0.01"
-                    :disabled="disabled"
-                />
-            </div>
-
-            <!-- Phea Fridge -->
-            <div class="form-group">
-                <Label for="pheaFridge">Phea Fridge</Label>
-                <Input
-                    id="pheaFridge"
-                    v-model="formData.pheaFridge"
-                    type="number"
-                    step="0.01"
-                    :disabled="disabled"
-                />
-            </div>
-
-            <!-- Mining -->
-            <div class="form-group">
-                <Label for="mining">Mining</Label>
-                <Input
-                    id="mining"
-                    v-model="formData.mining"
-                    type="number"
-                    step="0.01"
-                    :disabled="disabled"
-                />
-            </div>
-
             <!-- Electricity -->
             <div class="form-group">
                 <Label for="electricity">Electricity</Label>
@@ -152,10 +104,6 @@ interface Expense {
     id?: string;
     date: string;
     house: number;
-    totalElect: number | null;
-    rtAcFridge: number | null;
-    pheaFridge: number | null;
-    mining: number | null;
     electricity: number;
     water: number | null;
     waste: number | null;
@@ -180,10 +128,6 @@ const emit = defineEmits<{
 const formData = ref({
     date: new Date().toISOString().split("T")[0],
     house: "0",
-    totalElect: "",
-    rtAcFridge: "",
-    pheaFridge: "",
-    mining: "",
     electricity: "0",
     water: "",
     waste: "",
@@ -194,16 +138,6 @@ const formData = ref({
 const form = computed<Expense>(() => ({
     date: formData.value.date,
     house: Number(formData.value.house),
-    totalElect: formData.value.totalElect
-        ? Number(formData.value.totalElect)
-        : null,
-    rtAcFridge: formData.value.rtAcFridge
-        ? Number(formData.value.rtAcFridge)
-        : null,
-    pheaFridge: formData.value.pheaFridge
-        ? Number(formData.value.pheaFridge)
-        : null,
-    mining: formData.value.mining ? Number(formData.value.mining) : null,
     electricity: Number(formData.value.electricity),
     water: formData.value.water ? Number(formData.value.water) : null,
     waste: formData.value.waste ? Number(formData.value.waste) : null,
@@ -245,10 +179,6 @@ const handleSubmit = async () => {
             formData.value = {
                 date: new Date().toISOString().split("T")[0],
                 house: "0",
-                totalElect: "",
-                rtAcFridge: "",
-                pheaFridge: "",
-                mining: "",
                 electricity: "0",
                 water: "",
                 waste: "",
@@ -265,10 +195,6 @@ onMounted(() => {
         formData.value = {
             date: props.expense.date,
             house: props.expense.house.toString(),
-            totalElect: props.expense.totalElect?.toString() ?? "",
-            rtAcFridge: props.expense.rtAcFridge?.toString() ?? "",
-            pheaFridge: props.expense.pheaFridge?.toString() ?? "",
-            mining: props.expense.mining?.toString() ?? "",
             electricity: props.expense.electricity.toString(),
             water: props.expense.water?.toString() ?? "",
             waste: props.expense.waste?.toString() ?? "",
