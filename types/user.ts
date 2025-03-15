@@ -3,6 +3,7 @@ import { Timestamp } from "firebase/firestore";
 export interface UserProfile {
     uid: string;
     email: string;
+    username: string;
     displayName: string | null;
     photoURL: string | null;
     createdAt: Timestamp | Date;

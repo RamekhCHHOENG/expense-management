@@ -1,96 +1,182 @@
 <template>
-    <form id="expense-form" @submit.prevent="handleSubmit" class="space-y-4">
+    <form id="expense-form" @submit.prevent="onSubmit" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Date -->
-            <div class="form-group">
-                <Label for="date">Date</Label>
-                <DatePicker
-                    id="date"
-                    v-model="formData.date"
-                    :disabled="disabled"
-                    :class="{ 'border-red-500': errors.date }"
-                />
-                <span v-if="errors.date" class="text-sm text-red-500">{{
-                    errors.date
-                }}</span>
-            </div>
+            <FormField name="date" v-slot="{ value }">
+                <FormItem>
+                    <FormLabel>Date</FormLabel>
+                    <FormControl>
+                        <DatePicker
+                            :model-value="value"
+                            @update:model-value="
+                                (v) => setFieldValue('date', v)
+                            "
+                        />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            </FormField>
 
             <!-- House Rent -->
-            <div class="form-group">
-                <Label for="house">House Rent</Label>
-                <Input
-                    id="house"
-                    v-model="formData.house"
-                    type="number"
-                    step="0.01"
-                    :disabled="disabled"
-                    :class="{ 'border-red-500': errors.house }"
-                />
-                <span v-if="errors.house" class="text-sm text-red-500">{{
-                    errors.house
-                }}</span>
-            </div>
+            <FormField name="house" v-slot="{ value }">
+                <FormItem>
+                    <FormLabel>House Rent</FormLabel>
+                    <NumberField
+                        class="gap-2"
+                        :min="0"
+                        :format-options="{
+                            style: 'currency',
+                            currency: 'USD',
+                            currencyDisplay: 'symbol',
+                            currencySign: 'accounting',
+                        }"
+                        :model-value="value"
+                        :disabled="disabled"
+                        @update:model-value="
+                            (v) => setFieldValue('house', v ?? 0)
+                        "
+                    >
+                        <NumberFieldContent>
+                            <FormControl>
+                                <NumberFieldInput class="text-left pl-3" />
+                            </FormControl>
+                        </NumberFieldContent>
+                    </NumberField>
+                    <FormMessage />
+                </FormItem>
+            </FormField>
 
             <!-- Electricity -->
-            <div class="form-group">
-                <Label for="electricity">Electricity</Label>
-                <Input
-                    id="electricity"
-                    v-model="formData.electricity"
-                    type="number"
-                    step="0.01"
-                    :disabled="disabled"
-                    :class="{ 'border-red-500': errors.electricity }"
-                />
-                <span v-if="errors.electricity" class="text-sm text-red-500">{{
-                    errors.electricity
-                }}</span>
-            </div>
+            <FormField name="electricity" v-slot="{ value }">
+                <FormItem>
+                    <FormLabel>Electricity</FormLabel>
+                    <NumberField
+                        class="gap-2"
+                        :min="0"
+                        :format-options="{
+                            style: 'currency',
+                            currency: 'USD',
+                            currencyDisplay: 'symbol',
+                            currencySign: 'accounting',
+                        }"
+                        :model-value="value"
+                        :disabled="disabled"
+                        @update:model-value="
+                            (v) => setFieldValue('electricity', v ?? 0)
+                        "
+                    >
+                        <NumberFieldContent>
+                            <FormControl>
+                                <NumberFieldInput class="text-left pl-3" />
+                            </FormControl>
+                        </NumberFieldContent>
+                    </NumberField>
+                    <FormMessage />
+                </FormItem>
+            </FormField>
 
             <!-- Water -->
-            <div class="form-group">
-                <Label for="water">Water</Label>
-                <Input
-                    id="water"
-                    v-model="formData.water"
-                    type="number"
-                    step="0.01"
-                    :disabled="disabled"
-                />
-            </div>
+            <FormField name="water" v-slot="{ value }">
+                <FormItem>
+                    <FormLabel>Water</FormLabel>
+                    <NumberField
+                        class="gap-2"
+                        :min="0"
+                        :format-options="{
+                            style: 'currency',
+                            currency: 'USD',
+                            currencyDisplay: 'symbol',
+                            currencySign: 'accounting',
+                        }"
+                        :model-value="value"
+                        :disabled="disabled"
+                        @update:model-value="(v) => setFieldValue('water', v)"
+                    >
+                        <NumberFieldContent>
+                            <FormControl>
+                                <NumberFieldInput class="text-left pl-3" />
+                            </FormControl>
+                        </NumberFieldContent>
+                    </NumberField>
+                    <FormMessage />
+                </FormItem>
+            </FormField>
 
             <!-- Waste -->
-            <div class="form-group">
-                <Label for="waste">Waste</Label>
-                <Input
-                    id="waste"
-                    v-model="formData.waste"
-                    type="number"
-                    step="0.01"
-                    :disabled="disabled"
-                />
-            </div>
+            <FormField name="waste" v-slot="{ value }">
+                <FormItem>
+                    <FormLabel>Waste</FormLabel>
+                    <NumberField
+                        class="gap-2"
+                        :min="0"
+                        :format-options="{
+                            style: 'currency',
+                            currency: 'USD',
+                            currencyDisplay: 'symbol',
+                            currencySign: 'accounting',
+                        }"
+                        :model-value="value"
+                        :disabled="disabled"
+                        @update:model-value="(v) => setFieldValue('waste', v)"
+                    >
+                        <NumberFieldContent>
+                            <FormControl>
+                                <NumberFieldInput class="text-left pl-3" />
+                            </FormControl>
+                        </NumberFieldContent>
+                    </NumberField>
+                    <FormMessage />
+                </FormItem>
+            </FormField>
 
             <!-- Additional -->
-            <div class="form-group">
-                <Label for="additional">Additional</Label>
-                <Input
-                    id="additional"
-                    v-model="formData.additional"
-                    type="number"
-                    step="0.01"
-                    :disabled="disabled"
-                />
-            </div>
+            <FormField name="additional" v-slot="{ value }">
+                <FormItem>
+                    <FormLabel>Additional</FormLabel>
+                    <NumberField
+                        class="gap-2"
+                        :min="0"
+                        :format-options="{
+                            style: 'currency',
+                            currency: 'USD',
+                            currencyDisplay: 'symbol',
+                            currencySign: 'accounting',
+                        }"
+                        :model-value="value"
+                        :disabled="disabled"
+                        @update:model-value="
+                            (v) => setFieldValue('additional', v)
+                        "
+                    >
+                        <NumberFieldContent>
+                            <FormControl>
+                                <NumberFieldInput class="text-left pl-3" />
+                            </FormControl>
+                        </NumberFieldContent>
+                    </NumberField>
+                    <FormMessage />
+                </FormItem>
+            </FormField>
         </div>
 
         <!-- Expense Sharing Table -->
-        <div class="mt-6">
-            <RentalExpensesExpenseSharingTable
-                v-model="formData.shares"
-                :total-amount="totalAmount"
-                :disabled="disabled"
-            />
+        <div class="col-span-full">
+            <FormField name="users" v-slot="{ value }">
+                <FormItem>
+                    <FormLabel>Expense Sharing</FormLabel>
+                    <FormControl>
+                        <ExpenseSharingTable
+                            :model-value="value || []"
+                            :total-amount="totalAmount"
+                            :disabled="disabled"
+                            @update:model-value="
+                                (v) => setFieldValue('users', v)
+                            "
+                        />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            </FormField>
         </div>
 
         <div v-if="!disabled" class="flex justify-end space-x-2 mt-6">
@@ -105,13 +191,41 @@
 <script setup lang="ts">
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import {
+    NumberField,
+    NumberFieldContent,
+    NumberFieldInput,
+} from "@/components/ui/number-field";
+import { toTypedSchema } from "@vee-validate/zod";
+import { useForm } from "vee-validate";
 import { computed, onMounted, ref } from "vue";
-import type { Expense, ExpenseShare } from "~/types/expense";
+import * as z from "zod";
+import ExpenseSharingTable from "./expense-sharing-table.vue";
+
+interface ExpenseUser {
+    id: string;
+    name: string;
+    amount: number;
+    additionalExpenseType?: string;
+    additionalAmount?: number;
+}
 
 interface Props {
-    expense?: Expense;
+    expense?: {
+        date: string;
+        house: number;
+        water: number;
+        waste: number;
+        additional: number;
+        users: ExpenseUser[];
+    };
     disabled?: boolean;
 }
 
@@ -120,101 +234,92 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-    (e: "submit", expense: Expense): void;
+    (e: "submit", expense: Props["expense"]): void;
 }>();
 
-const formData = ref({
-    date: new Date().toISOString().split("T")[0],
-    house: "0",
-    electricity: "0",
-    water: "",
-    waste: "",
-    additional: "",
-    shares: [] as ExpenseShare[],
+const formSchema = toTypedSchema(
+    z.object({
+        date: z.string().min(1, "Date is required"),
+        house: z.number().min(0.01, "House rent must be greater than 0"),
+        water: z.number().optional().default(0),
+        waste: z.number().optional().default(0),
+        additional: z.number().optional().default(0),
+        users: z
+            .array(
+                z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    amount: z.number(),
+                    additionalExpenseType: z.string().optional(),
+                    additionalAmount: z.number().optional(),
+                })
+            )
+            .default([]),
+    })
+);
+
+const { handleSubmit, setFieldValue, values } = useForm({
+    validationSchema: formSchema,
+    initialValues: {
+        date: new Date().toISOString().split("T")[0],
+        house: 0,
+        water: 0,
+        waste: 0,
+        additional: 0,
+        users: [],
+    },
 });
 
 // Computed property for total amount
 const totalAmount = computed(() => {
     return (
-        Number(formData.value.house) +
-        Number(formData.value.electricity) +
-        (formData.value.water ? Number(formData.value.water) : 0) +
-        (formData.value.waste ? Number(formData.value.waste) : 0) +
-        (formData.value.additional ? Number(formData.value.additional) : 0)
+        (values.house || 0) +
+        (values.water || 0) +
+        (values.waste || 0) +
+        (values.additional || 0)
     );
 });
 
-// Computed properties to handle the conversion between string and number | null
-const form = computed<Expense>(() => ({
-    date: formData.value.date,
-    house: Number(formData.value.house),
-    electricity: Number(formData.value.electricity),
-    water: formData.value.water ? Number(formData.value.water) : null,
-    waste: formData.value.waste ? Number(formData.value.waste) : null,
-    additional: formData.value.additional
-        ? Number(formData.value.additional)
-        : null,
-    shares: formData.value.shares,
-}));
-
-const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
 
-const validateForm = () => {
-    errors.value = {};
-
-    if (!form.value.date) {
-        errors.value.date = "Date is required";
-    }
-
-    if (!form.value.house || form.value.house <= 0) {
-        errors.value.house = "House rent must be greater than 0";
-    }
-
-    if (!form.value.electricity || form.value.electricity < 0) {
-        errors.value.electricity = "Electricity must be 0 or greater";
-    }
-
-    return Object.keys(errors.value).length === 0;
-};
-
-const handleSubmit = async () => {
-    if (!validateForm()) return;
-
+const onSubmit = handleSubmit(async (formValues) => {
     isSubmitting.value = true;
     try {
-        emit("submit", form.value);
+        // Ensure all numeric values are initialized
+        const expense = {
+            date: formValues.date,
+            house: formValues.house || 0,
+            water: formValues.water || 0,
+            waste: formValues.waste || 0,
+            additional: formValues.additional || 0,
+            users: formValues.users.map((user) => ({
+                id: user.id,
+                name: user.name,
+                amount: user.amount || 0,
+                additionalExpenseType: user.additionalExpenseType,
+                additionalAmount: user.additionalAmount,
+            })),
+        };
 
-        if (!props.expense) {
-            // Reset form if adding new expense
-            formData.value = {
-                date: new Date().toISOString().split("T")[0],
-                house: "0",
-                electricity: "0",
-                water: "",
-                waste: "",
-                additional: "",
-                shares: [],
-            };
-        }
+        emit("submit", expense);
     } finally {
         isSubmitting.value = false;
     }
+});
+
+// Initialize form with expense data if editing
+const initializeForm = () => {
+    if (props.expense) {
+        setFieldValue("date", props.expense.date);
+        setFieldValue("house", props.expense.house);
+        setFieldValue("water", props.expense.water || 0);
+        setFieldValue("waste", props.expense.waste || 0);
+        setFieldValue("additional", props.expense.additional || 0);
+        setFieldValue("users", props.expense.users || []);
+    }
 };
 
-onMounted(() => {
-    if (props.expense) {
-        formData.value = {
-            date: props.expense.date,
-            house: props.expense.house.toString(),
-            electricity: props.expense.electricity.toString(),
-            water: props.expense.water?.toString() ?? "",
-            waste: props.expense.waste?.toString() ?? "",
-            additional: props.expense.additional?.toString() ?? "",
-            shares: props.expense.shares || [],
-        };
-    }
-});
+onMounted(initializeForm);
 </script>
 
 <style scoped>

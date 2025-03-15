@@ -34,14 +34,11 @@ export const useExpenses = () => {
         return {
             date: data.date,
             house: data.house.toString(),
-            totalElect: data.totalElect?.toString() ?? "",
-            rtAcFridge: data.rtAcFridge?.toString() ?? "",
-            pheaFridge: data.pheaFridge?.toString() ?? "",
-            mining: data.mining?.toString() ?? "",
             electricity: data.electricity.toString(),
             water: data.water?.toString() ?? "",
             waste: data.waste?.toString() ?? "",
             additional: data.additional?.toString() ?? "",
+            users: data.users || [],
         };
     };
 
@@ -51,14 +48,11 @@ export const useExpenses = () => {
             id: doc.id,
             date: data.date,
             house: parseFloat(data.house),
-            totalElect: data.totalElect ? parseFloat(data.totalElect) : null,
-            rtAcFridge: data.rtAcFridge ? parseFloat(data.rtAcFridge) : null,
-            pheaFridge: data.pheaFridge ? parseFloat(data.pheaFridge) : null,
-            mining: data.mining ? parseFloat(data.mining) : null,
             electricity: parseFloat(data.electricity),
             water: data.water ? parseFloat(data.water) : null,
             waste: data.waste ? parseFloat(data.waste) : null,
             additional: data.additional ? parseFloat(data.additional) : null,
+            users: data.users || [],
             createdAt: data.createdAt?.toDate(),
             updatedAt: data.updatedAt?.toDate(),
         };

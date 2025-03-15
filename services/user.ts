@@ -15,6 +15,7 @@ import {
 export interface UserProfile {
     uid: string;
     email: string;
+    username: string;
     displayName: string | null;
     photoURL: string | null;
     createdAt: Date;
@@ -58,20 +59,22 @@ export class UserService {
         additionalData: Partial<UserProfile> = {}
     ): Promise<UserProfile> {
         const userRef = this.getUserRef(user.uid);
+        const now = new Date();
 
         const userData: UserProfile = {
             uid: user.uid,
             email: user.email!,
+            username: additionalData.username || user.displayName || "",
             displayName: user.displayName,
             photoURL: user.photoURL,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: now,
+            updatedAt: now,
             preferences: {
                 theme: "light",
                 currency: "USD",
                 language: "en",
+                ...additionalData.preferences,
             },
-            ...additionalData,
         };
 
         await setDoc(userRef, userData);
@@ -94,10 +97,11 @@ export class UserService {
 
     async updateUser(uid: string, data: Partial<UserProfile>): Promise<void> {
         const userRef = this.getUserRef(uid);
-        await updateDoc(userRef, {
+        const updateData = {
             ...data,
             updatedAt: new Date(),
-        });
+        };
+        await updateDoc(userRef, updateData);
     }
 
     async deleteUser(uid: string): Promise<void> {

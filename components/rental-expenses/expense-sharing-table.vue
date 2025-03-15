@@ -14,28 +14,73 @@
                     <TableRow>
                         <TableHead>User</TableHead>
                         <TableHead class="text-right">Share Amount</TableHead>
+                        <TableHead>Additional Expense Type</TableHead>
+                        <TableHead class="text-right"
+                            >Additional Amount</TableHead
+                        >
                         <TableHead v-if="!disabled"></TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableRow v-if="!modelValue?.length">
                         <TableCell
-                            colspan="3"
+                            colspan="5"
                             class="text-center text-muted-foreground"
                         >
                             No users added yet
                         </TableCell>
                     </TableRow>
-                    <TableRow v-for="share in modelValue" :key="share.userId">
-                        <TableCell>{{ share.userName }}</TableCell>
+                    <TableRow v-for="user in modelValue" :key="user.id">
+                        <TableCell>{{ user.name }}</TableCell>
                         <TableCell class="text-right">{{
-                            formatCurrency(share.amount)
+                            formatCurrency(user.amount)
                         }}</TableCell>
+                        <TableCell>
+                            <Select
+                                v-model="user.additionalExpenseType"
+                                :disabled="disabled"
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select type..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem
+                                            v-for="type in additionalExpenseTypes"
+                                            :key="type.uuid"
+                                            :value="type.uuid"
+                                        >
+                                            {{ type.name }}
+                                        </SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                        </TableCell>
+                        <TableCell>
+                            <NumberField
+                                v-if="user.additionalExpenseType"
+                                :model-value="user.additionalAmount"
+                                @update:model-value="
+                                    (v) => updateAdditionalAmount(user.id, v)
+                                "
+                                :disabled="disabled"
+                                :format-options="{
+                                    style: 'currency',
+                                    currency: 'USD',
+                                }"
+                            >
+                                <NumberFieldContent>
+                                    <FormControl>
+                                        <NumberFieldInput class="text-right" />
+                                    </FormControl>
+                                </NumberFieldContent>
+                            </NumberField>
+                        </TableCell>
                         <TableCell v-if="!disabled" class="w-[50px]">
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                @click="removeUser(share.userId)"
+                                @click="removeUser(user.id)"
                             >
                                 <XIcon class="h-4 w-4" />
                             </Button>
@@ -52,10 +97,13 @@
                                     <SelectGroup>
                                         <SelectItem
                                             v-for="user in availableUsers"
-                                            :key="user.id"
-                                            :value="user.id"
+                                            :key="user.uid"
+                                            :value="user.uid"
                                         >
-                                            {{ user.name }}
+                                            {{
+                                                user.displayName ||
+                                                user.username
+                                            }}
                                         </SelectItem>
                                     </SelectGroup>
                                 </SelectContent>
@@ -74,6 +122,8 @@
                                     : "-"
                             }}
                         </TableCell>
+                        <TableCell></TableCell>
+                        <TableCell></TableCell>
                         <TableCell class="w-[50px]">
                             <Button
                                 variant="ghost"
@@ -81,7 +131,8 @@
                                 @click="addSelectedUser"
                                 :disabled="!selectedUserId"
                             >
-                                <PlusIcon class="h-4 w-4" />
+                                <span class="sr-only">Add user</span>
+                                <XIcon class="h-4 w-4 rotate-45" />
                             </Button>
                         </TableCell>
                     </TableRow>
@@ -92,7 +143,15 @@
 </template>
 
 <script setup lang="ts">
-import { Button } from "@/components/ui/button";
+import { XIcon } from "lucide-vue-next";
+import { computed, onMounted, ref, watch } from "vue";
+import { Button } from "~/components/ui/button";
+import { FormControl } from "~/components/ui/form";
+import {
+    NumberField,
+    NumberFieldContent,
+    NumberFieldInput,
+} from "~/components/ui/number-field";
 import {
     Select,
     SelectContent,
@@ -100,7 +159,7 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from "~/components/ui/select";
 import {
     Table,
     TableBody,
@@ -108,99 +167,138 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
-import { PlusIcon, XIcon } from "lucide-vue-next";
-import { computed, onMounted, ref, watch } from "vue";
-import type { User } from "~/stores/users";
-import { useUsersStore } from "~/stores/users";
-import type { Expense, ExpenseShare } from "~/types/expense";
-import { formatCurrency } from "~/utils/format";
+} from "~/components/ui/table";
+import type { UserProfile } from "~/services/user";
+import { useUserService } from "~/services/user";
 
-interface Props {
-    modelValue?: ExpenseShare[];
-    totalAmount: number;
-    disabled?: boolean;
-    expense?: Expense;
+interface ExpenseUser {
+    id: string;
+    name: string;
+    amount: number;
+    additionalExpenseType?: string;
+    additionalAmount?: number;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-    disabled: false,
-});
+interface AdditionalExpenseType {
+    uuid: string;
+    name: string;
+}
 
-const emit = defineEmits<{
-    (e: "update:modelValue", value: ExpenseShare[]): void;
+const additionalExpenseTypes = [
+    { uuid: "fridge", name: "Fridge" },
+    { uuid: "mining", name: "Mining" },
+    { uuid: "ac", name: "Air Conditioning" },
+];
+
+const props = defineProps<{
+    modelValue: ExpenseUser[];
+    totalAmount: number;
+    disabled?: boolean;
 }>();
 
-const usersStore = useUsersStore();
-const selectedUserId = ref<string | null>(null);
+const emit = defineEmits<{
+    (e: "update:model-value", value: ExpenseUser[]): void;
+}>();
+
+const userService = useUserService();
+const users = ref<UserProfile[]>([]);
+const selectedUserId = ref("");
+
+const recalculateAllShares = () => {
+    if (!props.modelValue?.length) return;
+
+    const numUsers = props.modelValue.length;
+    const newUsers = props.modelValue.map((user) => ({
+        ...user,
+        amount: calculateShareAmount(numUsers),
+    }));
+
+    emit("update:model-value", newUsers);
+};
+
+// Watch for changes in total amount
+watch(() => props.totalAmount, recalculateAllShares);
+
+// Fetch all users and initialize shares
+onMounted(async () => {
+    try {
+        users.value = await userService.getAllUsers();
+        recalculateAllShares();
+    } catch (error) {
+        console.error("Failed to fetch users:", error);
+    }
+});
 
 const availableUsers = computed(() => {
-    const currentUserIds = new Set(
-        props.modelValue?.map((share) => share.userId) || []
-    );
-    return usersStore.users.filter(
-        (user: User) => !currentUserIds.has(user.id)
+    return users.value.filter(
+        (user) =>
+            !props.modelValue?.some(
+                (expenseUser) => expenseUser.id === user.uid
+            )
     );
 });
+
+const calculateShareAmount = (numUsers: number) => {
+    if (numUsers <= 0) return 0;
+    return props.totalAmount / numUsers;
+};
+
+const updateAdditionalAmount = (userId: string, amount: number) => {
+    const newUsers = props.modelValue.map((user) => {
+        if (user.id === userId) {
+            return {
+                ...user,
+                additionalAmount: amount,
+            };
+        }
+        return user;
+    });
+    emit("update:model-value", newUsers);
+};
 
 const addSelectedUser = () => {
     if (!selectedUserId.value) return;
 
-    const user = usersStore.users.find((u) => u.id === selectedUserId.value);
+    const user = users.value.find((u) => u.uid === selectedUserId.value);
     if (!user) return;
 
-    const newShares = [...(props.modelValue || [])];
-    newShares.push({
-        userId: user.id,
-        userName: user.name,
-        amount: calculateShareAmount(newShares.length + 1),
+    const newUsers = [...(props.modelValue || [])];
+    const numUsers = newUsers.length + 1;
+
+    // Recalculate shares for all users
+    newUsers.forEach((u) => {
+        u.amount = calculateShareAmount(numUsers);
     });
 
-    // Recalculate amounts for all shares
-    newShares.forEach((share) => {
-        share.amount = calculateShareAmount(newShares.length);
+    // Add new user
+    newUsers.push({
+        id: user.uid,
+        name: user.displayName || user.username,
+        amount: calculateShareAmount(numUsers),
     });
 
-    emit("update:modelValue", newShares);
-    selectedUserId.value = null;
+    emit("update:model-value", newUsers);
+    selectedUserId.value = "";
 };
 
 const removeUser = (userId: string) => {
-    if (!props.modelValue) return;
+    const newUsers = props.modelValue.filter((u) => u.id !== userId);
+    const numUsers = newUsers.length;
 
-    const newShares = props.modelValue.filter(
-        (share) => share.userId !== userId
-    );
-
-    // Recalculate amounts for remaining shares
-    newShares.forEach((share) => {
-        share.amount = calculateShareAmount(newShares.length);
+    // Recalculate shares for remaining users
+    newUsers.forEach((u) => {
+        u.amount = calculateShareAmount(numUsers);
     });
 
-    emit("update:modelValue", newShares);
+    emit("update:model-value", newUsers);
 };
 
-const calculateShareAmount = (numberOfShares: number) => {
-    return numberOfShares > 0 ? props.totalAmount / numberOfShares : 0;
+const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(amount);
 };
-
-// Watch for changes in totalAmount to recalculate shares
-watch(
-    () => props.totalAmount,
-    (newAmount) => {
-        if (!props.modelValue?.length) return;
-
-        const newShares = [...props.modelValue];
-        newShares.forEach((share) => {
-            share.amount = calculateShareAmount(newShares.length);
-        });
-
-        emit("update:modelValue", newShares);
-    },
-    { immediate: true }
-);
-
-onMounted(async () => {
-    await usersStore.fetchUsers();
-});
 </script>

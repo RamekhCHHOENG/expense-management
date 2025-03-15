@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="24" height="24" rx="12" fill="#4F46E5"/>
-    <path d="M17.5 12H6.5M6.5 12L10 8.5M6.5 12L10 15.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M13 7L15.5 17" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background Circle -->
+    <circle cx="256" cy="256" r="248" fill="#4F46E5" />
+    
+    <!-- Dollar Sign -->
+    <path d="M288 176V160H256V176H240C213.49 176 192 197.49 192 224C192 250.51 213.49 272 240 272H272C281.941 272 290 280.059 290 290C290 299.941 281.941 308 272 308H208C198.059 308 190 299.941 190 290V288H158V304C158 330.51 179.49 352 206 352H240V368H272V352H288C314.51 352 336 330.51 336 304C336 277.49 314.51 256 288 256H256C246.059 256 238 247.941 238 238C238 228.059 246.059 220 256 220H320C329.941 220 338 228.059 338 238V240H370V224C370 197.49 348.51 176 322 176H288Z" fill="white"/>
+    
+    <!-- Chart Lines -->
+    <path d="M144 352H368" stroke="white" stroke-width="24" stroke-linecap="round"/>
+    <path d="M144 308H188" stroke="white" stroke-width="16" stroke-linecap="round"/>
+    <path d="M324 308H368" stroke="white" stroke-width="16" stroke-linecap="round"/>
+    <path d="M144 264H188" stroke="white" stroke-width="16" stroke-linecap="round"/>
+    <path d="M324 264H368" stroke="white" stroke-width="16" stroke-linecap="round"/>
 </svg> 

@@ -21,8 +21,21 @@ import type { UserProfile } from "~/services/user";
 
 interface UserForm {
     name: string;
+    username: string;
     email: string;
     password: string;
+    preferences: {
+        theme: "light" | "dark";
+        currency: string;
+        language: string;
+    };
+}
+
+interface UserFormSubmitData {
+    username: string;
+    displayName: string;
+    email?: string;
+    password?: string;
     preferences: {
         theme: "light" | "dark";
         currency: string;
@@ -36,12 +49,13 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: "submit", form: UserForm): void;
+    (e: "submit", form: UserFormSubmitData): void;
     (e: "cancel"): void;
 }>();
 
 const form = reactive<UserForm>({
     name: "",
+    username: "",
     email: "",
     password: "",
     preferences: {
@@ -56,16 +70,21 @@ watch(
     () => props.editingUser,
     (user) => {
         if (user) {
+            // Ensure we have valid data by providing defaults
+            const preferences = user.preferences || {};
             form.name = user.displayName || "";
-            form.email = user.email;
+            form.username = user.username || "";
+            form.email = user.email || "";
+            form.password = ""; // Don't populate password for security
             form.preferences = {
-                theme: (user.preferences?.theme || "light") as "light" | "dark",
-                currency: user.preferences?.currency || "USD",
-                language: user.preferences?.language || "en",
+                theme: (preferences.theme as "light" | "dark") || "light",
+                currency: preferences.currency || "USD",
+                language: preferences.language || "en",
             };
         } else {
             // Reset form when not editing
             form.name = "";
+            form.username = "";
             form.email = "";
             form.password = "";
             form.preferences = {
@@ -75,11 +94,28 @@ watch(
             };
         }
     },
-    { immediate: true } // Run immediately to set initial values
+    { immediate: true }
 );
 
 const handleSubmit = () => {
-    emit("submit", form);
+    // Ensure we have valid data by providing defaults
+    const formData: UserFormSubmitData = {
+        username: form.username.trim() || "",
+        displayName: form.name.trim() || "",
+        preferences: {
+            theme: form.preferences?.theme || "light",
+            currency: form.preferences?.currency || "USD",
+            language: form.preferences?.language || "en",
+        },
+    };
+
+    // Only include password and email for new users
+    if (!props.editingUser) {
+        formData.email = form.email.trim();
+        formData.password = form.password;
+    }
+
+    emit("submit", formData);
 };
 </script>
 
@@ -87,79 +123,99 @@ const handleSubmit = () => {
     <DialogContent class="sm:max-w-[500px]">
         <DialogHeader>
             <DialogTitle>{{
-                editingUser ? "Edit User" : "Create User"
+                editingUser ? "Edit User" : "Add User"
             }}</DialogTitle>
             <DialogDescription>
-                {{
-                    editingUser
-                        ? "Update user details"
-                        : "Add a new user to the system"
-                }}
+                {{ editingUser ? "Edit user details" : "Add a new user" }}
             </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="handleSubmit" class="space-y-4">
             <div class="grid gap-4">
                 <div class="grid gap-2">
-                    <Label for="name">Full Name</Label>
-                    <Input id="name" v-model="form.name" required />
+                    <Label for="name">Name</Label>
+                    <Input
+                        id="name"
+                        v-model="form.name"
+                        placeholder="Enter name"
+                        :disabled="loading"
+                    />
+                </div>
+                <div class="grid gap-2">
+                    <Label for="username">Username</Label>
+                    <Input
+                        id="username"
+                        v-model="form.username"
+                        placeholder="Enter username"
+                        :disabled="loading"
+                        title="Username can only contain letters, numbers, underscores, and hyphens"
+                        required
+                    />
                 </div>
                 <div class="grid gap-2">
                     <Label for="email">Email</Label>
                     <Input
                         id="email"
-                        type="email"
                         v-model="form.email"
-                        required
-                        :disabled="!!editingUser"
-                    />
-                </div>
-                <div v-if="!editingUser" class="grid gap-2">
-                    <Label for="password">Password</Label>
-                    <Input
-                        id="password"
-                        type="password"
-                        v-model="form.password"
-                        required
+                        type="email"
+                        placeholder="Enter email"
+                        :disabled="loading"
                     />
                 </div>
                 <div class="grid gap-2">
-                    <Label>Preferences</Label>
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2">
-                            <Label for="theme">Theme</Label>
-                            <Select v-model="form.preferences.theme">
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select theme" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="light">Light</SelectItem>
-                                    <SelectItem value="dark">Dark</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <Label for="currency">Currency</Label>
-                            <Input
-                                id="currency"
-                                v-model="form.preferences.currency"
-                            />
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <Label for="language">Language</Label>
-                            <Input
-                                id="language"
-                                v-model="form.preferences.language"
-                            />
-                        </div>
-                    </div>
+                    <Label for="password">Password</Label>
+                    <Input
+                        id="password"
+                        v-model="form.password"
+                        type="password"
+                        placeholder="Enter password"
+                        :disabled="loading"
+                    />
+                </div>
+                <div class="grid gap-2">
+                    <Label for="theme">Theme</Label>
+                    <Select
+                        v-model="form.preferences.theme"
+                        :disabled="loading"
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select theme" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="light">Light</SelectItem>
+                            <SelectItem value="dark">Dark</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div class="grid gap-2">
+                    <Label for="currency">Currency</Label>
+                    <Input
+                        id="currency"
+                        v-model="form.preferences.currency"
+                        placeholder="Enter currency"
+                        :disabled="loading"
+                    />
+                </div>
+                <div class="grid gap-2">
+                    <Label for="language">Language</Label>
+                    <Input
+                        id="language"
+                        v-model="form.preferences.language"
+                        placeholder="Enter language"
+                        :disabled="loading"
+                    />
                 </div>
             </div>
             <DialogFooter>
-                <Button type="button" variant="outline" @click="emit('cancel')">
+                <Button
+                    type="button"
+                    variant="outline"
+                    :disabled="loading"
+                    @click="emit('cancel')"
+                >
                     Cancel
                 </Button>
-                <Button type="submit" :disabled="loading">
-                    {{ editingUser ? "Update" : "Create" }}
+                <Button type="submit" :loading="loading">
+                    {{ editingUser ? "Save Changes" : "Add User" }}
                 </Button>
             </DialogFooter>
         </form>

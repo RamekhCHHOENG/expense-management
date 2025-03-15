@@ -6,7 +6,6 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
     Pagination,
-    PaginationEllipsis,
     PaginationList,
     PaginationListItem,
     PaginationNext,
@@ -45,6 +44,7 @@ const filteredUsers = computed(() => {
     return props.users.filter(
         (user) =>
             user.displayName?.toLowerCase().includes(searchLower) ||
+            user.username.toLowerCase().includes(searchLower) ||
             user.email.toLowerCase().includes(searchLower)
     );
 });
@@ -152,221 +152,125 @@ const totalItems = computed(() => filteredUsers.value.length);
 </script>
 
 <template>
-    <!-- Search and Filter -->
-    <div class="flex items-center gap-4 mb-4">
-        <div class="flex-1">
-            <Input
-                v-model="search"
-                placeholder="Search users..."
-                class="max-w-sm"
-            >
-                <template #prefix>
-                    <Search class="w-4 h-4 text-muted-foreground" />
-                </template>
-            </Input>
-        </div>
-    </div>
-
-    <!-- Users Table Container -->
-    <div class="relative rounded-md border">
-        <div class="overflow-x-auto">
-            <div class="inline-block min-w-full align-middle">
-                <div class="overflow-hidden">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead class="w-[200px]">ID</TableHead>
-                                <TableHead class="w-[250px]">User</TableHead>
-                                <TableHead class="w-[250px]">Email</TableHead>
-                                <TableHead class="w-[180px]">Created</TableHead>
-                                <TableHead class="w-[180px]">Updated</TableHead>
-                                <TableHead class="w-[120px] text-right"
-                                    >Actions</TableHead
-                                >
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow
-                                v-for="user in paginatedUsers"
-                                :key="user.uid"
-                            >
-                                <TableCell class="text-muted-foreground">
-                                    <div
-                                        class="max-w-[100px] truncate"
-                                        :title="user.uid"
-                                    >
-                                        {{ user.uid }}
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div class="flex items-center gap-3">
-                                        <Avatar v-if="user.photoURL">
-                                            <AvatarImage
-                                                :src="user.photoURL"
-                                                :alt="user.displayName || ''"
-                                            />
-                                            <AvatarFallback>{{
-                                                getInitials(user.displayName)
-                                            }}</AvatarFallback>
-                                        </Avatar>
-                                        <Avatar v-else>
-                                            <AvatarFallback>{{
-                                                getInitials(user.displayName)
-                                            }}</AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <p
-                                                class="font-medium max-w-[180px] truncate"
-                                                :title="
-                                                    user.displayName ||
-                                                    'No Name'
-                                                "
-                                            >
-                                                {{
-                                                    user.displayName ||
-                                                    "No Name"
-                                                }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div
-                                        class="max-w-[250px] truncate"
-                                        :title="user.email"
-                                    >
-                                        {{ user.email }}
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div
-                                        class="max-w-[180px] truncate"
-                                        :title="formatDate(user.createdAt)"
-                                    >
-                                        {{ formatDate(user.createdAt) }}
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div
-                                        class="max-w-[180px] truncate"
-                                        :title="formatDate(user.updatedAt)"
-                                    >
-                                        {{ formatDate(user.updatedAt) }}
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div class="flex justify-end gap-2">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            @click="emit('view', user)"
-                                        >
-                                            <Eye class="w-4 h-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            @click="emit('edit', user)"
-                                        >
-                                            <Pencil class="w-4 h-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            @click="emit('delete', user)"
-                                        >
-                                            <Trash class="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow v-if="loading">
-                                <TableCell colspan="6" class="text-center py-8">
-                                    <Loader2
-                                        class="w-6 h-6 animate-spin mx-auto"
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow v-else-if="!paginatedUsers.length">
-                                <TableCell
-                                    colspan="6"
-                                    class="text-center py-8 text-muted-foreground"
-                                >
-                                    No users found.
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
+    <div class="space-y-4">
+        <!-- Search and Filter -->
+        <div class="flex items-center gap-2">
+            <div class="relative flex-1">
+                <Search
+                    class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground"
+                />
+                <Input
+                    v-model="search"
+                    class="pl-8"
+                    placeholder="Search users..."
+                />
             </div>
         </div>
-    </div>
 
-    <!-- Pagination -->
-    <div
-        class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4"
-    >
-        <!-- Pagination Information -->
-        <p class="text-sm text-muted-foreground order-2 sm:order-1">
-            Showing <span class="font-medium">{{ startItem }}</span> to
-            <span class="font-medium">{{ endItem }}</span> of
-            <span class="font-medium">{{ totalItems }}</span> users
-            <span class="mx-1">•</span>
-            Page <span class="font-medium">{{ currentPage }}</span> of
-            <span class="font-medium">{{ totalPages }}</span>
-            <span class="mx-1">•</span>
-            <span class="font-medium">{{ itemsPerPage }}</span> items per page
-        </p>
-        <Pagination class="order-1 sm:order-2">
-            <PaginationList class="flex items-center justify-center gap-1">
-                <PaginationListItem>
-                    <PaginationPrev
-                        class="cursor-pointer"
-                        :class="{
-                            'opacity-50 cursor-not-allowed': currentPage === 1,
-                        }"
-                        :disabled="currentPage === 1"
-                        @click="
-                            currentPage !== 1 &&
-                            handlePageChange(currentPage - 1)
-                        "
-                    />
-                </PaginationListItem>
+        <!-- Users Table -->
+        <div class="rounded-md border">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>User</TableHead>
+                        <TableHead>Username</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead>Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow v-if="loading" class="hover:bg-transparent">
+                        <TableCell colspan="5" class="h-24 text-center">
+                            <Loader2 class="mx-auto h-6 w-6 animate-spin" />
+                        </TableCell>
+                    </TableRow>
+                    <TableRow
+                        v-else-if="!paginatedUsers.length"
+                        class="hover:bg-transparent"
+                    >
+                        <TableCell colspan="5" class="h-24 text-center">
+                            No users found.
+                        </TableCell>
+                    </TableRow>
+                    <TableRow v-for="user in paginatedUsers" :key="user.uid">
+                        <TableCell>
+                            <div class="flex items-center gap-2">
+                                <Avatar>
+                                    <AvatarImage
+                                        v-if="user.photoURL"
+                                        :src="user.photoURL"
+                                        :alt="user.displayName || ''"
+                                    />
+                                    <AvatarFallback>{{
+                                        getInitials(user.displayName)
+                                    }}</AvatarFallback>
+                                </Avatar>
+                                <span>{{ user.displayName || "No name" }}</span>
+                            </div>
+                        </TableCell>
+                        <TableCell>{{ user.username }}</TableCell>
+                        <TableCell>{{ user.email }}</TableCell>
+                        <TableCell>{{
+                            new Date(user.createdAt).toLocaleDateString()
+                        }}</TableCell>
+                        <TableCell>
+                            <div class="flex items-center gap-2">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    @click="$emit('view', user)"
+                                >
+                                    <Eye class="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    @click="$emit('edit', user)"
+                                >
+                                    <Pencil class="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    @click="$emit('delete', user)"
+                                >
+                                    <Trash class="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+        </div>
 
-                <template v-for="page in visiblePages" :key="page">
-                    <PaginationListItem v-if="page === 'ellipsis'">
-                        <PaginationEllipsis />
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="flex justify-center">
+            <Pagination
+                :page="currentPage"
+                :items-per-page="itemsPerPage"
+                :total="filteredUsers.length"
+            >
+                <PaginationPrev
+                    :disabled="currentPage === 1"
+                    @click="handlePageChange(currentPage - 1)"
+                />
+                <PaginationList>
+                    <PaginationListItem
+                        v-for="page in totalPages"
+                        :key="page"
+                        :value="page"
+                        :active="page === currentPage"
+                        @click="handlePageChange(page)"
+                    >
+                        {{ page }}
                     </PaginationListItem>
-                    <PaginationListItem v-else>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            :class="{
-                                'bg-primary text-primary-foreground':
-                                    currentPage === page,
-                            }"
-                            @click="handlePageChange(page)"
-                        >
-                            {{ page }}
-                        </Button>
-                    </PaginationListItem>
-                </template>
-
-                <PaginationListItem>
-                    <PaginationNext
-                        class="cursor-pointer"
-                        :class="{
-                            'opacity-50 cursor-not-allowed':
-                                currentPage === totalPages,
-                        }"
-                        :disabled="currentPage === totalPages"
-                        @click="
-                            currentPage !== totalPages &&
-                            handlePageChange(currentPage + 1)
-                        "
-                    />
-                </PaginationListItem>
-            </PaginationList>
-        </Pagination>
+                </PaginationList>
+                <PaginationNext
+                    :disabled="currentPage === totalPages"
+                    @click="handlePageChange(currentPage + 1)"
+                />
+            </Pagination>
+        </div>
     </div>
 </template>

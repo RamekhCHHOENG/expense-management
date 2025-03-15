@@ -661,7 +661,7 @@ onMounted(async () => {
     await fetchExpenses();
     if (expenses.value.length === 0) {
         console.log("No expenses found, seeding initial data...");
-        await seedInitialData(expsenData);
+        // await seedInitialData(expsenData);
         await fetchExpenses();
     }
 });

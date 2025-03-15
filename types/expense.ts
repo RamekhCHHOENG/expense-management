@@ -1,7 +1,9 @@
-export interface ExpenseShare {
-    userId: string;
-    userName: string;
+export interface ExpenseUser {
+    id: string;
+    name: string;
+    email: string;
     amount: number;
+    electricityShare: number;
 }
 
 export interface Expense {
@@ -12,7 +14,7 @@ export interface Expense {
     water: number | null;
     waste: number | null;
     additional: number | null;
-    shares: ExpenseShare[];
+    users: ExpenseUser[];
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -24,5 +26,5 @@ export interface FirestoreExpense {
     water: string;
     waste: string;
     additional: string;
-    shares: ExpenseShare[];
+    users: ExpenseUser[];
 }

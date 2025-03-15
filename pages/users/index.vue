@@ -56,8 +56,13 @@ const handleSubmit = async (form: any) => {
         if (editingUser.value) {
             // Update existing user
             await userService.updateUser(editingUser.value.uid, {
-                displayName: form.name,
-                preferences: form.preferences,
+                displayName: form.displayName || "",
+                username: form.username || "",
+                preferences: {
+                    theme: form.preferences?.theme || "light",
+                    currency: form.preferences?.currency || "USD",
+                    language: form.preferences?.language || "en",
+                },
             });
             toast({
                 title: "Success",
@@ -66,13 +71,14 @@ const handleSubmit = async (form: any) => {
         } else {
             // Create new user with Firebase Auth and Firestore
             const user = await authStore.signUp(
-                form.email,
-                form.password,
-                form.name
+                form.email!,
+                form.password!,
+                form.displayName || ""
             );
             if (user) {
-                // Create user profile with preferences
+                // Create user profile with username and preferences
                 await userService.createUser(user, {
+                    username: form.username,
                     preferences: form.preferences,
                 });
                 toast({
