@@ -26,7 +26,7 @@
         "firebase": "^11.4.0",
         "lucide-vue-next": "^0.479.0",
         "radix-vue": "^1.9.17",
-        "reka-ui": "^2.0.2",
+        "reka-ui": "^2.1.0",
         "shadcn-vue": "^1.0.3",
         "tailwind-merge": "^3.0.2",
         "vaul-vue": "^0.4.0",

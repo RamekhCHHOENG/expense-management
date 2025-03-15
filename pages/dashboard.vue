@@ -1,181 +1,296 @@
 <!-- pages/dashboard.vue -->
 <template>
-    <div class="container mx-auto p-8 space-y-8">
-        <div class="flex items-center justify-between mb-8">
-            <h1 class="text-4xl font-bold tracking-tight">Dashboard</h1>
-            <Button v-if="!loading" variant="outline" @click="fetchUsers">
-                <RefreshCcw class="mr-2 h-4 w-4" />
-                Refresh
-            </Button>
+    <div class="container mx-auto p-6 space-y-8">
+        <!-- Header Section -->
+        <div
+            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight">Dashboard</h1>
+                <p class="text-muted-foreground mt-1">
+                    Welcome back! Here's an overview of your finances.
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <Button variant="outline" size="sm">
+                    <CalendarIcon class="h-4 w-4 mr-2" />
+                    <span>This Month</span>
+                    <ChevronDownIcon class="h-4 w-4 ml-2" />
+                </Button>
+                <Button size="sm">
+                    <DownloadIcon class="h-4 w-4 mr-2" />
+                    Export
+                </Button>
+            </div>
         </div>
 
-        <div v-if="loading" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <Card v-for="i in 3" :key="i" class="shadow-md">
-                <CardHeader>
-                    <CardTitle>
-                        <div
-                            class="h-4 w-24 bg-muted animate-pulse rounded"
-                        ></div>
+        <!-- Overview Cards -->
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <!-- Total Balance Card -->
+            <Card>
+                <CardHeader
+                    class="flex flex-row items-center justify-between pb-2"
+                >
+                    <CardTitle class="text-sm font-medium">
+                        Total Balance
                     </CardTitle>
-                    <CardDescription>
-                        <div
-                            class="h-3 w-32 bg-muted animate-pulse rounded"
-                        ></div>
-                    </CardDescription>
+                    <DollarSignIcon class="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div class="h-[200px] bg-muted animate-pulse rounded"></div>
-                </CardContent>
-            </Card>
-        </div>
-
-        <div v-else class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <Card class="shadow-md">
-                <CardHeader>
-                    <CardTitle>Total Users</CardTitle>
-                    <CardDescription>Overall user count</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div class="flex items-center space-x-4">
-                        <Users class="h-8 w-8 text-primary" />
-                        <div class="text-4xl font-bold">{{ totalUsers }}</div>
+                    <div class="text-2xl font-bold">
+                        ${{ totalExpenses.toFixed(2) }}
                     </div>
+                    <div
+                        v-if="loading"
+                        class="animate-pulse bg-muted h-4 w-24 rounded mt-1"
+                    ></div>
+                    <Progress v-else class="mt-2" :value="65" />
                 </CardContent>
             </Card>
 
-            <Card class="shadow-md">
+            <!-- Income Card -->
+            <Card>
+                <CardHeader
+                    class="flex flex-row items-center justify-between pb-2"
+                >
+                    <CardTitle class="text-sm font-medium">
+                        Monthly Income
+                    </CardTitle>
+                    <TrendingUpIcon class="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div class="text-2xl font-bold">$4,980.00</div>
+                    <p class="text-xs text-muted-foreground mt-1">
+                        <span class="text-emerald-500 font-medium">+5.2%</span>
+                        from last month
+                    </p>
+                    <Progress class="mt-2" value="{85}" />
+                </CardContent>
+            </Card>
+
+            <!-- Expenses Card -->
+            <Card>
+                <CardHeader
+                    class="flex flex-row items-center justify-between pb-2"
+                >
+                    <CardTitle class="text-sm font-medium">
+                        Monthly Expenses
+                    </CardTitle>
+                    <TrendingDownIcon class="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div class="text-2xl font-bold">$3,450.00</div>
+                    <p class="text-xs text-muted-foreground mt-1">
+                        <span class="text-rose-500 font-medium">+8.1%</span>
+                        from last month
+                    </p>
+                    <Progress class="mt-2" value="{45}" />
+                </CardContent>
+            </Card>
+
+            <!-- Savings Rate Card -->
+            <Card>
+                <CardHeader
+                    class="flex flex-row items-center justify-between pb-2"
+                >
+                    <CardTitle class="text-sm font-medium">
+                        Savings Rate
+                    </CardTitle>
+                    <PiggyBankIcon class="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div class="text-2xl font-bold">30.7%</div>
+                    <p class="text-xs text-muted-foreground mt-1">
+                        <span class="text-emerald-500 font-medium">+2.3%</span>
+                        from last month
+                    </p>
+                    <Progress class="mt-2" value="{30}" />
+                </CardContent>
+            </Card>
+        </div>
+
+        <!-- Charts and Tables Section -->
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+            <!-- Expense vs Income Chart -->
+            <Card class="lg:col-span-4">
                 <CardHeader>
-                    <CardTitle>Active vs Inactive Users</CardTitle>
+                    <CardTitle>Expense vs Income</CardTitle>
                     <CardDescription
-                        >Based on last login activity</CardDescription
+                        >Monthly comparison over the last 6
+                        months</CardDescription
                     >
                 </CardHeader>
-                <CardContent class="h-[200px]">
-                    <DonutChart
-                        :data="activeInactiveUsers"
-                        :colors="['hsl(var(--primary))', 'hsl(var(--muted))']"
+                <CardContent>
+                    <div
+                        v-if="loading"
+                        class="h-[300px] flex items-center justify-center"
+                    >
+                        <span class="text-muted-foreground"
+                            >Loading chart data...</span
+                        >
+                    </div>
+                    <BarChart
+                        v-else
+                        :data="monthlyComparison"
+                        :x-key="'month'"
+                        :y-keys="['income', 'expense']"
+                        :colors="[
+                            'hsl(var(--primary))',
+                            'hsl(var(--destructive))',
+                        ]"
+                        class="h-[300px]"
                     />
                 </CardContent>
             </Card>
 
-            <Card class="shadow-md">
+            <!-- Expense Breakdown Chart -->
+            <Card class="lg:col-span-3">
                 <CardHeader>
-                    <CardTitle>New Users by Month</CardTitle>
-                    <CardDescription
-                        >Monthly registration trend</CardDescription
-                    >
+                    <CardTitle>Expense Breakdown</CardTitle>
+                    <CardDescription>Current month by category</CardDescription>
                 </CardHeader>
-                <CardContent class="h-[200px]">
-                    <BarChart
-                        :data="usersByMonth"
-                        :x-key="'month'"
-                        :y-key="'count'"
-                        :color="'hsl(var(--primary))'"
+                <CardContent>
+                    <DonutChart
+                        :data="expenseByCategory"
+                        :valueKey="'value'"
+                        :nameKey="'name'"
+                        :colors="[
+                            'hsl(var(--primary))',
+                            'hsl(var(--destructive))',
+                            'hsl(var(--warning))',
+                            'hsl(var(--secondary))',
+                            'hsl(var(--accent))',
+                        ]"
+                        class="h-[300px]"
                     />
                 </CardContent>
             </Card>
         </div>
 
-        <Card class="shadow-md">
-            <CardHeader>
-                <CardTitle>User Growth Over Time</CardTitle>
-                <CardDescription>Cumulative user growth trend</CardDescription>
+        <!-- Recent Transactions -->
+        <Card>
+            <CardHeader class="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Recent Transactions</CardTitle>
+                    <CardDescription
+                        >Your latest financial activities</CardDescription
+                    >
+                </div>
+                <Button variant="ghost" size="sm" class="gap-1">
+                    View All
+                    <ArrowRightIcon class="h-4 w-4" />
+                </Button>
             </CardHeader>
-            <CardContent class="h-[300px]">
-                <AreaChart
-                    :data="userGrowthData"
-                    :x-key="'month'"
-                    :y-key="'total'"
-                    :color="'hsl(var(--primary))'"
-                />
+            <CardContent>
+                <div v-if="loading" class="space-y-4">
+                    <div
+                        v-for="i in 5"
+                        :key="i"
+                        class="animate-pulse flex items-center gap-4"
+                    >
+                        <div class="h-4 bg-muted rounded w-1/3"></div>
+                        <div class="h-4 bg-muted rounded w-24"></div>
+                        <div class="h-4 bg-muted rounded w-24"></div>
+                        <div class="h-4 bg-muted rounded w-24 ml-auto"></div>
+                    </div>
+                </div>
+                <Table v-else>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Description</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead class="text-right">Amount</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow
+                            v-for="(transaction, i) in recentTransactions"
+                            :key="i"
+                        >
+                            <TableCell>{{ transaction.description }}</TableCell>
+                            <TableCell>
+                                <Badge
+                                    :variant="
+                                        transaction.type === 'expense'
+                                            ? 'destructive'
+                                            : 'default'
+                                    "
+                                    class="font-normal"
+                                >
+                                    {{ transaction.category }}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>{{ transaction.date }}</TableCell>
+                            <TableCell
+                                class="text-right font-medium"
+                                :class="
+                                    transaction.type === 'expense'
+                                        ? 'text-destructive'
+                                        : 'text-emerald-600'
+                                "
+                            >
+                                {{
+                                    transaction.type === "expense" ? "-" : "+"
+                                }}${{ transaction.amount }}
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
             </CardContent>
         </Card>
     </div>
 </template>
 
 <script setup lang="ts">
-import { RefreshCcw, Users } from "lucide-vue-next";
-import { computed, onMounted, ref } from "vue";
-import { Button } from "~/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from "~/components/ui/card";
-import { AreaChart, BarChart, DonutChart } from "~/components/ui/charts";
-import { getUsersService, initializeFirestore } from "~/services/firestore";
-import type { UserProfile } from "~/types/user";
+} from "@/components/ui/card";
+import { BarChart, DonutChart } from "@/components/ui/charts";
+import { Progress } from "@/components/ui/progress";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import {
+    ArrowRightIcon,
+    CalendarIcon,
+    ChevronDownIcon,
+    DollarSignIcon,
+    DownloadIcon,
+    PiggyBankIcon,
+    TrendingDownIcon,
+    TrendingUpIcon,
+} from "lucide-vue-next";
+import { onMounted } from "vue";
+import { useDashboard } from "~/composables/useDashboard";
 
-const { $firebase } = useNuxtApp();
-initializeFirestore($firebase);
+const {
+    loading,
+    totalExpenses,
+    expensesByCategory,
+    recentTransactions,
+    monthlyComparison,
+    savingsRate,
+    fetchDashboardData,
+} = useDashboard();
 
-const users = ref<UserProfile[]>([]);
-const loading = ref(true);
-
-// Fetch users data
-const fetchUsers = async () => {
-    try {
-        loading.value = true;
-        users.value = await getUsersService();
-    } catch (error) {
-        console.error("Error fetching users:", error);
-    } finally {
-        loading.value = false;
-    }
-};
-
-// Analytics computed properties
-const totalUsers = computed(() => users.value.length);
-
-const usersByMonth = computed(() => {
-    const months: Record<string, number> = {};
-    users.value.forEach((user) => {
-        const date = user.createdAt;
-        const monthYear = date.toLocaleString("default", {
-            month: "short",
-            year: "numeric",
-        });
-        months[monthYear] = (months[monthYear] || 0) + 1;
-    });
-    return Object.entries(months).map(([month, count]) => ({
-        month,
-        count,
-    }));
-});
-
-const activeInactiveUsers = computed(() => {
-    const active = users.value.filter((user) => user.lastLoginAt).length;
-    const inactive = users.value.length - active;
-    return [
-        { name: "Active", value: active },
-        { name: "Inactive", value: inactive },
-    ];
-});
-
-const userGrowthData = computed(() => {
-    const monthlyData: Record<string, number> = {};
-    users.value.forEach((user) => {
-        const date = user.createdAt;
-        const monthYear = date.toLocaleString("default", {
-            month: "short",
-            year: "numeric",
-        });
-        monthlyData[monthYear] = (monthlyData[monthYear] || 0) + 1;
-    });
-
-    let cumulative = 0;
-    return Object.entries(monthlyData).map(([month, count]) => {
-        cumulative += count;
-        return {
-            month,
-            total: cumulative,
-        };
-    });
-});
-
+// Fetch data on mount
 onMounted(() => {
-    fetchUsers();
+    fetchDashboardData();
 });
+
+// Remove the static ref data and use computed values instead
+const incomeVsExpense = monthlyComparison;
+const expenseByCategory = expensesByCategory;
 </script>
