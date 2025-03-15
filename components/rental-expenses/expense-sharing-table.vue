@@ -3,68 +3,96 @@
         <div class="flex items-center justify-between">
             <h3 class="text-lg font-medium">Expense Sharing</h3>
             <Button
+                v-if="!disabled"
+                @click="showAddUser = true"
                 variant="outline"
                 size="sm"
-                @click="addUser"
-                :disabled="disabled"
             >
-                <PlusIcon class="h-4 w-4 mr-2" />
                 Add User
             </Button>
         </div>
 
+        <!-- Users Table -->
         <div class="rounded-md border">
             <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead>User</TableHead>
-                        <TableHead class="w-[100px] text-right"
-                            >Share Amount</TableHead
-                        >
-                        <TableHead class="w-[100px]"></TableHead>
+                        <TableHead class="text-right">Share Amount</TableHead>
+                        <TableHead v-if="!disabled"></TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="(share, index) in shares" :key="index">
-                        <TableCell @click.stop>
-                            <ComboBox
-                                v-model="share.userId"
-                                :options="users"
-                                :disabled="disabled"
-                                @update:model-value="updateShares"
-                            />
-                        </TableCell>
-                        <TableCell class="text-right">
-                            $ {{ formatAmount(share.amount) }}
-                        </TableCell>
-                        <TableCell>
-                            <Button
-                                v-if="!disabled"
-                                variant="ghost"
-                                size="icon"
-                                @click="removeUser(index)"
-                            >
-                                <TrashIcon class="h-4 w-4" />
-                            </Button>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow v-if="shares.length === 0">
+                    <TableRow v-if="!modelValue?.length">
                         <TableCell
                             colspan="3"
                             class="text-center text-muted-foreground"
                         >
-                            No users added
+                            No users added yet
+                        </TableCell>
+                    </TableRow>
+                    <TableRow v-for="share in modelValue" :key="share.userId">
+                        <TableCell>{{ share.userName }}</TableCell>
+                        <TableCell class="text-right">{{
+                            formatCurrency(share.amount)
+                        }}</TableCell>
+                        <TableCell v-if="!disabled" class="w-[50px]">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                @click="removeUser(share.userId)"
+                            >
+                                <XIcon class="h-4 w-4" />
+                            </Button>
                         </TableCell>
                     </TableRow>
                 </TableBody>
             </Table>
         </div>
+
+        <!-- Add User Dialog -->
+        <Dialog v-model:open="showAddUser">
+            <DialogContent class="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Add User</DialogTitle>
+                    <DialogDescription>
+                        Select a user to add to expense sharing
+                    </DialogDescription>
+                </DialogHeader>
+                <div class="grid gap-4 py-4">
+                    <Combobox
+                        v-model="selectedUser"
+                        :options="availableUsers"
+                        display-field="name"
+                        value-field="id"
+                        placeholder="Select a user..."
+                    />
+                </div>
+                <DialogFooter>
+                    <Button
+                        type="submit"
+                        @click="addUser"
+                        :disabled="!selectedUser"
+                    >
+                        Add User
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
 </template>
 
 <script setup lang="ts">
 import { Button } from "@/components/ui/button";
-import { ComboBox } from "@/components/ui/combobox";
+import { Combobox } from "@/components/ui/combobox";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import {
     Table,
     TableBody,
@@ -73,102 +101,81 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { PlusIcon, TrashIcon } from "@heroicons/vue/20/solid";
-import { collection, getDocs } from "firebase/firestore";
-import { ref, watch } from "vue";
+import { XIcon } from "lucide-vue-next";
+import { computed, ref } from "vue";
+import type { User } from "~/stores/users";
+import { useUsersStore } from "~/stores/users";
 import type { ExpenseShare } from "~/types/expense";
-const { db } = useFirebase();
+import { formatCurrency } from "~/utils/format";
 
 interface Props {
+    modelValue?: ExpenseShare[];
     totalAmount: number;
     disabled?: boolean;
-    modelValue?: ExpenseShare[];
-}
-
-interface User {
-    id: string;
-    name: string;
-    email: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     disabled: false,
-    modelValue: () => [],
 });
 
 const emit = defineEmits<{
-    (e: "update:modelValue", shares: ExpenseShare[]): void;
+    (e: "update:modelValue", value: ExpenseShare[]): void;
 }>();
 
-const users = ref<User[]>([]);
-const shares = ref<ExpenseShare[]>(props.modelValue);
+const usersStore = useUsersStore();
+const showAddUser = ref(false);
+const selectedUser = ref<string | null>(null);
 
-// Fetch users from Firebase
-const fetchUsers = async () => {
-    try {
-        const querySnapshot = await getDocs(collection(db, "users"));
-        users.value = querySnapshot.docs.map(
-            (doc) =>
-                ({
-                    id: doc.id,
-                    ...doc.data(),
-                }) as User
-        );
-    } catch (error) {
-        console.error("Error fetching users:", error);
-    }
-};
-
-// Format amount to 2 decimal places
-const formatAmount = (amount: number) => {
-    return amount.toFixed(2);
-};
-
-// Add new user to shares
-const addUser = () => {
-    shares.value.push({
-        userId: "",
-        userName: "",
-        amount: calculateShareAmount(shares.value.length + 1),
-    });
-    updateShares();
-};
-
-// Remove user from shares
-const removeUser = (index: number) => {
-    shares.value.splice(index, 1);
-    updateShares();
-};
-
-// Calculate share amount per user
-const calculateShareAmount = (numberOfUsers: number) => {
-    return numberOfUsers > 0 ? props.totalAmount / numberOfUsers : 0;
-};
-
-// Update share amounts when users change
-const updateShares = () => {
-    const amount = calculateShareAmount(shares.value.length);
-    shares.value = shares.value.map((share) => {
-        const user = users.value.find((u) => u.id === share.userId);
-        return {
-            ...share,
-            amount,
-            userName: user ? user.name || user.email : "",
-        };
-    });
-    emit("update:modelValue", shares.value);
-};
-
-// Watch for changes in total amount
-watch(
-    () => props.totalAmount,
-    () => {
-        updateShares();
-    }
-);
-
-// Initialize component
-onMounted(async () => {
-    await fetchUsers();
+const availableUsers = computed(() => {
+    const currentUserIds = new Set(
+        props.modelValue?.map((share) => share.userId) || []
+    );
+    return usersStore.users.filter(
+        (user: User) => !currentUserIds.has(user.id)
+    );
 });
+
+const addUser = () => {
+    if (!selectedUser.value || !props.modelValue) return;
+
+    const user = usersStore.users.find(
+        (u: User) => u.id === selectedUser.value
+    );
+    if (!user) return;
+
+    const newShares = [...props.modelValue];
+    newShares.push({
+        userId: user.id,
+        userName: user.name,
+        amount: calculateShareAmount(newShares.length + 1),
+    });
+
+    // Recalculate amounts for all shares
+    newShares.forEach((share) => {
+        share.amount = calculateShareAmount(newShares.length);
+    });
+
+    emit("update:modelValue", newShares);
+    selectedUser.value = null;
+    showAddUser.value = false;
+};
+
+const removeUser = (userId: string) => {
+    if (!props.modelValue) return;
+
+    const newShares = props.modelValue.filter(
+        (share) => share.userId !== userId
+    );
+
+    // Recalculate amounts for remaining shares
+    newShares.forEach((share) => {
+        share.amount = calculateShareAmount(newShares.length);
+    });
+
+    emit("update:modelValue", newShares);
+};
+
+const calculateShareAmount = (numberOfShares: number) => {
+    return numberOfShares > 0 ? props.totalAmount / numberOfShares : 0;
+};
 </script>

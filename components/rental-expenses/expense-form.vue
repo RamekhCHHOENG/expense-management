@@ -84,7 +84,16 @@
             </div>
         </div>
 
-        <div v-if="!disabled" class="flex justify-end space-x-2">
+        <!-- Expense Sharing Table -->
+        <div class="mt-6">
+            <RentalExpensesExpenseSharingTable
+                v-model="formData.shares"
+                :total-amount="totalAmount"
+                :disabled="disabled"
+            />
+        </div>
+
+        <div v-if="!disabled" class="flex justify-end space-x-2 mt-6">
             <Button type="submit" :disabled="isSubmitting">
                 {{ isSubmitting ? "Saving..." : expense ? "Update" : "Add" }}
                 Expense
@@ -99,18 +108,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { computed, onMounted, ref } from "vue";
-
-interface Expense {
-    id?: string;
-    date: string;
-    house: number;
-    electricity: number;
-    water: number | null;
-    waste: number | null;
-    additional: number | null;
-    createdAt?: Date;
-    updatedAt?: Date;
-}
+import type { Expense, ExpenseShare } from "~/types/expense";
 
 interface Props {
     expense?: Expense;
@@ -132,6 +130,18 @@ const formData = ref({
     water: "",
     waste: "",
     additional: "",
+    shares: [] as ExpenseShare[],
+});
+
+// Computed property for total amount
+const totalAmount = computed(() => {
+    return (
+        Number(formData.value.house) +
+        Number(formData.value.electricity) +
+        (formData.value.water ? Number(formData.value.water) : 0) +
+        (formData.value.waste ? Number(formData.value.waste) : 0) +
+        (formData.value.additional ? Number(formData.value.additional) : 0)
+    );
 });
 
 // Computed properties to handle the conversion between string and number | null
@@ -144,6 +154,7 @@ const form = computed<Expense>(() => ({
     additional: formData.value.additional
         ? Number(formData.value.additional)
         : null,
+    shares: formData.value.shares,
 }));
 
 const errors = ref<Record<string, string>>({});
@@ -183,6 +194,7 @@ const handleSubmit = async () => {
                 water: "",
                 waste: "",
                 additional: "",
+                shares: [],
             };
         }
     } finally {
@@ -199,6 +211,7 @@ onMounted(() => {
             water: props.expense.water?.toString() ?? "",
             waste: props.expense.waste?.toString() ?? "",
             additional: props.expense.additional?.toString() ?? "",
+            shares: props.expense.shares || [],
         };
     }
 });

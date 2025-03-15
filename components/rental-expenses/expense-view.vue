@@ -1,10 +1,10 @@
 <template>
-    <Dialog :open="isOpen" @update:open="$emit('update:is-open', $event)">
-        <DialogContent class="sm:max-w-[600px]">
+    <Dialog v-model:open="isOpen">
+        <DialogContent class="sm:max-w-[425px]">
             <DialogHeader>
-                <DialogTitle
-                    >{{ isEditMode ? "Edit" : "View" }} Expense</DialogTitle
-                >
+                <DialogTitle>
+                    {{ isEditMode ? "Edit" : "View" }} Expense
+                </DialogTitle>
                 <DialogDescription>
                     {{
                         isEditMode
@@ -13,20 +13,17 @@
                     }}
                 </DialogDescription>
             </DialogHeader>
-
-            <div class="grid gap-4 py-4">
+            <div class="flex-1 overflow-y-auto">
                 <ExpenseForm
+                    v-if="expense"
                     :expense="expense"
                     :disabled="!isEditMode"
                     @submit="handleUpdate"
                 />
             </div>
-
-            <DialogFooter v-if="isEditMode">
-                <Button type="button" variant="outline" @click="cancelEdit"
-                    >Cancel</Button
-                >
-                <Button type="submit" form="expense-form">Save changes</Button>
+            <DialogFooter v-if="!isEditMode">
+                <Button @click="isEditMode = true">Edit</Button>
+                <Button variant="outline" @click="isOpen = false">Close</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
@@ -42,44 +39,41 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { computed, ref, watch } from "vue";
+import type { Expense } from "~/types/expense";
 import ExpenseForm from "./expense-form.vue";
 
-interface Expense {
-    id?: string;
-    date: string;
-    house: number;
-    totalElect: number | null;
-    rtAcFridge: number | null;
-    pheaFridge: number | null;
-    mining: number | null;
-    electricity: number;
-    water: number | null;
-    waste: number | null;
-    additional: number | null;
-    createdAt?: Date;
-    updatedAt?: Date;
+interface Props {
+    expense: Expense;
+    modelValue?: boolean;
 }
 
-const props = defineProps<{
-    expense: Expense;
-    isOpen: boolean;
-    isEditMode: boolean;
-}>();
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
-    (e: "update:is-open", value: boolean): void;
+    (e: "update:modelValue", value: boolean): void;
     (e: "update", expense: Expense): void;
-    (e: "cancel-edit"): void;
 }>();
 
-const handleUpdate = (updatedExpense: Expense) => {
+const isOpen = computed({
+    get: () => props.modelValue ?? false,
+    set: (value) => emit("update:modelValue", value),
+});
+
+const isEditMode = ref(false);
+
+const handleUpdate = async (updatedExpense: Expense) => {
     emit("update", {
         ...updatedExpense,
         id: props.expense.id,
     });
+    isEditMode.value = false;
+    isOpen.value = false;
 };
 
-const cancelEdit = () => {
-    emit("cancel-edit");
-};
+watch(isOpen, (value) => {
+    if (!value) {
+        isEditMode.value = false;
+    }
+});
 </script>
